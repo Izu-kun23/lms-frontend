@@ -1,3 +1,6 @@
+"use client"
+import React from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,37 +16,71 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const router = useRouter()
+  const [error, setError] = React.useState<string>("")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError("")
+    setIsSubmitting(true)
+    const formData = new FormData(event.currentTarget)
+    const email = String(formData.get("email") || "")
+    const password = String(formData.get("password") || "")
+    const normalizedEmail = email.trim().toLowerCase()
+    const normalizedPassword = password.trim()
+
+    if (normalizedEmail === "izuchukwuonuoha6@gmail.com" && normalizedPassword === "12345678") {
+      router.push("/dashboard")
+      return
+    }
+    setError("Invalid email or password.")
+    setIsSubmitting(false)
+  }
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
           <p className="text-muted-foreground text-sm text-balance">
             Enter your email below to login to your account
           </p>
+          <p className="text-muted-foreground text-xs mt-1">Demo: izuchukwuonuoha6@gmail.com / 12345678</p>
         </div>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input id="email" name="email" type="email" placeholder="m@example.com" required />
         </Field>
         <Field>
           <div className="flex items-center">
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <a
-              href="#"
+              href="/forgot-password"
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
               Forgot your password?
             </a>
           </div>
-          <Input id="password" type="password" required />
+          <Input id="password" name="password" type="password" required />
         </Field>
+        <Field>
+          <div className="flex items-center gap-2">
+            <input id="remember" type="checkbox" className="h-4 w-4 rounded border" />
+            <label htmlFor="remember" className="text-sm">Remember me</label>
+          </div>
+        </Field>
+        {error ? (
+          <FieldDescription className="text-center text-red-600">
+            {error}
+          </FieldDescription>
+        ) : null}
         <Field>
           <Button
             type="submit"
-            className="bg-[#4153a6] text-white hover:bg-[#364795]"
+            className="bg-black text-white hover:bg-black/90 w-full"
+            disabled={isSubmitting}
           >
-            Login
+            {isSubmitting ? "Signing in..." : "Login"}
           </Button>
         </Field>
         <FieldSeparator>Or continue with</FieldSeparator>
@@ -59,7 +96,7 @@ export function LoginForm({
           </Button>
           <FieldDescription className="text-center">
             Don&apos;t have an account?{" "}
-            <a href="#" className="underline underline-offset-4">
+            <a href="/signup" className="underline underline-offset-4">
               Sign up
             </a>
           </FieldDescription>

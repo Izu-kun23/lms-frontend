@@ -1,0 +1,228 @@
+GLACQ LMS – UI Flow Spec
+
+Purpose: End-to-end UI flow for authentication-related experiences (Login, Registration, SSO, MFA, Organization selection) aligned with backend capabilities described in FEATURE_README.
+
+1) Entry Points
+- /login: Email/password login + SSO entry, links to reset password and signup.
+- /signup: Self-serve registration, SSO signup, links to login. May be prefilled when coming from an invite.
+
+2) Registration (/signup)
+- Form fields: Full name, email, password, confirm password.
+- Optional: Organization code field and “Request to join an organization” link.
+- CTA: Create Account (black, full width). Secondary: Continue with Google.
+- Validation: Realtime; password rules; inline errors.
+- Submit → Outcomes:
+  a) Success → Email Verification Required?
+     - If yes: Show verification prompt screen with “Open email app”, “Resend”, “Change email”. After verification → proceed to step (3) Org Selection.
+     - If no: proceed directly to (3) Org Selection.
+  b) Error → show inline errors or non-intrusive top alert (rate limit, network, server).
+
+3) Organization Selection (post login or signup when required)
+- Triggered when user belongs to multiple orgs or has pending invitations.
+- Screen: List of organizations with role badge (Student/Instructor/Admin). Search/filter if >5.
+- Actions: Select org → Continue. Optional: “Accept invitation” confirmation if arriving via invite.
+- Result: Persist selected org in session; continue to (5) MFA Check.
+
+4) Login (/login)
+- Form fields: Email, password, remember me checkbox.
+- Links: Forgot your password?, Sign up.
+- CTA: Login (black, full width). Secondary: Continue with Google.
+- Validation: Realtime inline errors. Disabled CTA while submitting.
+- Submit → Outcomes:
+  a) Success: If multiple orgs → go to (3) Org Selection; else go to (5) MFA Check.
+  b) Credentials error: Inline message on password field and/or top alert.
+  c) Rate limit or server: Non-intrusive top alert with retry guidance.
+
+5) MFA Check (if enabled for user)
+- Screen: 6-digit TOTP input with paste support and auto-advance.
+- Links: “Use a backup code”, “Can’t access MFA?” (help).
+- CTA: Verify. State: loading/disabled while verifying.
+- Outcomes:
+  a) Success → (6) Role-Based Redirect.
+  b) Failure → Inline error; allow retry; show rate limit if exceeded.
+
+6) Role-Based Redirect (after login/signup + org + MFA)
+- Backend returns roles per user per org. Frontend redirects:
+  - Admin → /admin
+  - Instructor → /instructor
+  - Student → /dashboard
+  - Super Admin → /super-admin
+- If multiple roles for selected org: choose highest-privileged route (Super Admin > Admin > Instructor > Student) or show a role picker if desired.
+
+7) Forgot Password (/forgot-password)
+- Form: Email field, CTA “Send reset link”.
+- Success: Confirmation screen “Check your email”. Resend option.
+- Error: Inline validation and top alert as needed.
+
+8) Reset Password (/reset-password?token=...)
+- Form: New password, confirm password. CTA: “Reset password”.
+- Success: Success screen with link to login. Optional auto-redirect.
+- Error: Invalid/expired token state with “Resend link”.
+
+9) SSO (Google; room for Microsoft)
+- From Login/Signup: “Continue with Google”.
+- Initiates OAuth → returns via /sso/callback.
+- Outcomes after callback:
+  - New user → complete minimal profile if needed → (3) Org Selection → (5) MFA if enforced → (6) Redirect.
+  - Existing user → (3) Org Selection (if needed) → (5) MFA (if enabled) → (6) Redirect.
+- Error: Display safe generic error and link to password login.
+
+9a) Admin SSO Configuration (Admin-only)
+- Location: Admin app → Settings → SSO.
+- Purpose: Configure organization-specific SSO (Google, Microsoft/Azure AD, SAML) as supported by backend.
+- UI Sections:
+  - Provider Cards: Google, Microsoft, SAML (each has Configure button).
+  - Configuration Form per provider:
+    - Google: Client ID, Client Secret, Allowed Callback URL (read-only hint), Allowed Domains (optional), Enable toggle.
+    - Microsoft/Azure AD: Tenant ID, Client ID, Client Secret, Callback URL hint, Enable toggle.
+    - SAML: Metadata URL or XML upload, Entity ID, ACS URL hint, Certificate upload, Enable toggle.
+  - Testing Tools: “Start test login” opens provider auth in a new window; shows success/error status.
+  - Save/Enable Controls: Save config, then Enable/Disable provider.
+- Safety/UX:
+  - Show generated callback URL and required redirect URIs for copy.
+  - Require re-auth with admin password before enabling changes (optional).
+  - Surface validation errors clearly.
+- Effect on Login UI:
+  - On /login and /signup, when an org is known (via subdomain, slug, or selection), show its enabled SSO providers as buttons (e.g., “Continue with Google for Acme”).
+  - Deep-link: /sso/login?org=:slug&provider=:id can be used from marketing sites or bookmarks.
+  - If no org context yet, default generic “Continue with Google”; after callback, resolve org by email domain or account links, otherwise prompt for org selection.
+
+10) Invitations Flow (Email-based)
+- Invite link carries org and role.
+- Landing → Accept Invitation screen shows Org + Role; CTA “Accept & Continue”.
+- After acceptance:
+  - Not registered → go to /signup with email prefilled and role/org locked; on success → (5) MFA if enforced → (6) Redirect.
+  - Already registered → prompt to login/SSO; after auth → (6) Redirect.
+
+11) Global UX/Accessibility
+- Forms are keyboard navigable with visible focus states.
+- Buttons show loading and are disabled during requests.
+- All error messages are concise and field-scoped where possible.
+- Mobile: Single-column; hero image collapses; spacing tightened; same flows.
+
+12) Client-Side State & Persistence (implementation guidance)
+- Persist selected org and role in session/local storage as needed until logout.
+- Respect “Remember me” by controlling token/session persistence per backend guidance.
+- After logout, clear org/role selection and cached user profile.
+
+13) Routes Summary (for planning)
+- /login
+- /signup
+- /forgot-password
+- /reset-password
+- /sso/callback
+ - /sso/login (optional deep-link with org/provider query)
+- /select-organization (if split as its own route)
+- Post-auth landings: /dashboard, /instructor, /admin, /super-admin
+ - Admin settings: /admin/settings/sso
+
+This document focuses on the UI/UX sequence; wiring to backend endpoints (auth, SSO, MFA, invitations) should follow FEATURE_README.
+
+
+============================================================
+Wider App – End-to-End UI Flow (beyond auth)
+============================================================
+
+A) Global Shell
+- App frame with top nav (brand GLACQ, search, notifications bell, user menu) and optional sidebar in learning areas.
+- Theme: light/dark from existing provider. Mobile: collapsible menus.
+
+B) Post‑Auth Landing (Role-Based)
+- Student → /dashboard: My courses, continue learning card (resume), tasks due, notifications.
+- Instructor → /instructor: Teaching overview, courses you manage, grading queue.
+- Admin → /admin: Org stats, users, courses, SSO settings, health shortcuts.
+- Super Admin → /super-admin: Multi‑org overview and controls.
+
+C) Organizations
+- Org Switcher: In header; shows current org, allows switching/leave; if multiple, mirrors Select Organization UI.
+- Invitations: Accept/Reject invites screen; after accept → role set and org added.
+
+D) Courses – Browse and Manage
+1) Student Browse (/courses)
+  - Tabs: Enrolled, All (if allowed). Cards show title, code, progress, instructor.
+  - Actions: Enroll (if open), View details, Continue learning.
+2) Course Details (/courses/:id)
+  - Cover, description, instructor, progress, modules outline, CTA Continue/Start.
+3) Instructor/Admin Manage
+  - Create/Edit Course (title, code, summary, cover). Publish toggle. Delete with confirm.
+
+E) Modules & Lectures
+- Course Syllabus pane on the left; content area on the right.
+- Modules listed with index; lectures inside with completion ticks.
+- Actions: Mark complete/incomplete (auto from viewers), reorder (instructor), add/edit/delete (instructor).
+
+F) Content Types – Playback/Viewing
+- Text: Rich text renderer with anchors.
+- Video: Player with resume last position; speed, captions; full-screen.
+- Audio: Player with resume; skip controls.
+- File: Download/view links; file type icons.
+- Live: External link with safety warning.
+
+G) Progress Tracking
+- Auto-save position every few seconds on video/audio.
+- Lecture completion toggle; progress bar at course and module levels.
+- Resume card on dashboards: “Continue Course X at Lecture Y”.
+
+H) Assessments
+1) Quizzes
+  - Student
+    • Quiz Overview: time limit, attempts allowed, instructions.
+    • Attempt Screen: question navigator, each question view (MCQ, TF, Short Answer, Essay). Timer visible.
+    • Submit → Results: score, feedback; Attempt history list.
+  - Instructor
+    • Manage Quizzes: create/update/delete; question bank per quiz (options CRUD, correct answers, scoring, time limit, attempts).
+2) Assignments
+  - Student
+    • Assignment Details: description, due date, status, submission area (file upload or text). Submit/Update submission.
+    • After grading: grade + feedback shown.
+  - Instructor
+    • Create/Edit/Delete assignments.
+    • Submissions List: status filters, open a submission, grade field, feedback textarea, save grade.
+
+I) Messaging (Threads & Messages)
+- Course Discussions: Threads list with create button. Each thread shows title, author, time.
+- Inside thread: messages timeline with editor, edit/delete own messages, real-time updates.
+
+J) Notifications
+- Bell menu: recent notifications, mark read/unread, view all at /notifications.
+- Notification types: progress reminders, grading, invites; deep-links to target.
+
+K) Files & Storage
+- Upload widgets (assignments, content management). Drag & drop with type/size validation and progress.
+- File Info modal: size, type, uploaded date; delete (with permission).
+
+L) Admin Area (/admin)
+1) Dashboard: KPIs (users, courses, activity), charts, quick links.
+2) Users: table with search, role chips, change role, delete user (confirm).
+3) Organizations: create, update profile, stats; invite users; configure SSO.
+4) SSO Settings (/admin/settings/sso): provider cards, config forms, enable/disable, test login.
+5) System: health page (proxied status), logs link; database connectivity indicator.
+
+M) Super Admin (/super-admin)
+- Multi‑org list with stats; impersonate or jump into org admin; limit to privileged users.
+
+N) Account & Settings
+- Profile: name, avatar, email (readonly if SSO), password change (if password auth), MFA management.
+- Security: enable/disable TOTP MFA, view/download backup codes (guarded view).
+- Preferences: theme, notifications, language (future), time zone.
+
+O) Error & Empty States
+- Global error banner component (rate limit, network). Retry/Contact links.
+- Empty states with clear CTAs (e.g., “No courses yet – browse courses”).
+
+P) Routing Summary (aggregate)
+- Public: /login, /signup, /forgot-password, /reset-password, /sso/login, /sso/callback
+- Post-auth: /dashboard, /courses, /courses/:id, /courses/:id/lecture/:lectureId, /select-organization, /mfa
+- Assessments: /courses/:id/quizzes, /quizzes/:id, /assignments/:id, /submissions/:id
+- Messaging: /courses/:id/threads, /threads/:id
+- Notifications: /notifications
+- Admin: /admin, /admin/users, /admin/organizations, /admin/settings/sso, /admin/system
+- Super Admin: /super-admin
+- Account: /settings/profile, /settings/security, /settings/preferences
+
+Q) Implementation Notes
+- Gate routes by role/permission using guards; redirect to org/role pickers when needed.
+- Persist session, selected org, and resume data; clear on logout.
+- Use existing UI primitives (`Field`, `Button`, `Input`, separators) for consistent forms.
+
+

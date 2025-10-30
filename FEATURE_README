@@ -1,0 +1,745 @@
+  🎓 GenLMS Backend - Feature Overview
+
+A comprehensive documentation of all features and capabilities available in the GenLMS Learning Management System backend.
+
+---
+
+## 📋 Table of Contents
+
+1. [Authentication & Security](#authentication--security)
+2. [User Management](#user-management)
+3. [Organization Management](#organization-management)
+4. [Course Management](#course-management)
+5. [Progress Tracking](#progress-tracking)
+6. [Assessment & Evaluation](#assessment--evaluation)
+7. [File Storage & Submissions](#file-storage--submissions)
+8. [Real-Time Communication](#real-time-communication)
+9. [Notifications](#notifications)
+10. [Administration](#administration)
+11. [System Health & Monitoring](#system-health--monitoring)
+
+---
+Fe
+## 🔐 Authentication & Security
+
+### User Registration & Login
+
+- **User Registration**: Create new user accounts with email, password, and basic information
+- **Email/Password Login**: Traditional authentication flow
+- **Multi-Organization Login**: Support for users belonging to multiple organizations
+- **Organization Selection**: Login flow that presents available organizations for selection
+- **JWT Token Management**: Access tokens (15min) and refresh tokens (30 days)
+- **Token Refresh**: Secure token refresh endpoint
+- **Logout**: Secure logout with token invalidation
+
+### Password Management
+
+- **Forgot Password**: Request password reset via email
+- **Password Reset**: Secure token-based password reset flow
+- **Email Integration**: Professional email templates using Resend API
+
+### Multi-Factor Authentication (MFA)
+
+- **MFA Setup**: Initialize TOTP-based MFA with QR code generation
+- **MFA Enable**: Verify and enable MFA using TOTP token
+- **MFA Verification**: Verify MFA token during login
+- **MFA Disable**: Remove MFA from user account
+- **Backup Codes**: Generate and manage backup codes for account recovery
+
+### Single Sign-On (SSO)
+
+- **Google SSO**: OAuth 2.0 integration with Google
+- **Microsoft SSO**: Azure AD / Microsoft 365 integration
+- **SAML Support**: Enterprise SAML SSO configuration
+- **Organization-Specific SSO**: Custom SSO configurations per organization
+- **SSO Callback Handling**: Secure OAuth callback processing
+
+### Security Features
+
+- **Role-Based Access Control (RBAC)**: Student, Instructor, Admin, Super Admin roles
+- **JWT Authentication Guards**: Protected route access
+- **Rate Limiting**: Request throttling (100 requests/minute)
+- **Security Headers**: Helmet middleware for security headers
+- **CORS Configuration**: Configurable cross-origin resource sharing
+- **Input Validation**: Comprehensive DTO validation with class-validator
+- **Password Hashing**: bcrypt with secure salt rounds
+- **SQL Injection Protection**: Prisma ORM parameterized queries
+
+---
+
+## 👥 User Management
+
+### User Operations
+
+- **User Profile Management**: View and update user profiles
+- **User Roles**: Assign and manage user roles (Student, Instructor, Admin, Super Admin)
+- **Role Updates**: Admin-controlled role changes
+- **User Deletion**: Secure user account removal (Admin only)
+
+### User Data
+
+- **User Profiles**: Complete user information management
+- **Organization Membership**: Track user-organization relationships
+- **Multi-Organization Support**: Users can belong to multiple organizations
+- **User Statistics**: Analytics and metrics per user
+
+---
+
+## 🏢 Organization Management
+
+### Organization Operations
+
+- **Create Organization**: Create new multi-tenant organizations
+- **Organization Slug**: Unique URL-friendly identifiers
+- **Organization Profile**: Update organization details and settings
+- **Get Organizations**: List organizations (scoped by user permissions)
+- **Organization Lookup**: Find by ID or slug
+- **Delete Organization**: Remove organizations (Super Admin only)
+
+### User Invitations
+
+- **Invite Users**: Email-based invitation system
+- **Invitation Management**: Send invitations with roles
+- **Accept Invitations**: Secure invitation acceptance flow
+- **Invitation Status**: Track invitation states
+
+### Organization Features
+
+- **Organization Statistics**: Analytics and metrics per organization
+- **Organization-Specific Settings**: Custom configurations per organization
+- **Data Isolation**: Complete data separation between organizations
+- **Custom SSO Configuration**: Per-organization SSO settings
+
+---
+
+## 📚 Course Management
+
+### Course Structure
+
+- **Create Courses**: Build courses with title, code, summary, and cover image
+- **Update Courses**: Modify course details
+- **Delete Courses**: Remove courses (Instructor/Admin only)
+- **List Courses**: View courses based on role (enrolled for students, all for instructors)
+- **Course Details**: Retrieve complete course information
+
+### Module Management
+
+- **Create Modules**: Add modules to courses
+- **Module Ordering**: Organize modules with index/position
+- **Update Modules**: Modify module details
+- **Delete Modules**: Remove modules
+- **List Modules**: View all modules for a course
+
+### Lecture Management
+
+- **Create Lectures**: Add lectures to modules
+- **Lecture Details**: Title, description, and metadata
+- **Update Lectures**: Modify lecture information
+- **Delete Lectures**: Remove lectures
+- **List Lectures**: View all lectures in a module
+
+### Content Management
+
+- **Content Types Supported**:
+  - **Text Content**: Rich text and markdown content
+  - **Video Content**: Video URLs and embedded players
+  - **Audio Content**: Audio files and streaming
+  - **File Content**: Document downloads (PDF, DOCX, etc.)
+  - **Live Content**: Links to live sessions/streams
+
+### Content Operations
+
+- **Create Content**: Add various content types to lectures
+- **Content Ordering**: Index-based content organization
+- **Update Content**: Modify content details and URLs
+- **Delete Content**: Remove content items
+- **List Content**: View all content for a lecture
+
+---
+
+## 📊 Progress Tracking
+
+### Progress Management
+
+- **Update Progress**: Mark lectures as completed/incomplete
+- **Position Tracking**: Track last position in videos/audio
+- **Time Spent**: Record time spent on content
+- **Progress Persistence**: Save and retrieve progress data
+
+### Auto-Save Features
+
+- **Auto-Save Progress**: Automatic progress saving during learning
+- **Last Position**: Resume from last viewed position
+- **Last Content ID**: Resume from specific content item
+- **Session Continuity**: Maintain learning state across sessions
+
+### Progress Analytics
+
+- **Lecture Progress**: Individual lecture completion status
+- **Course Progress**: Overall course completion percentage
+- **User Progress**: Complete progress view across all courses
+- **Progress Reports**: Detailed progress analytics for instructors/admins
+
+### Session Management
+
+- **User Sessions**: Track active learning sessions
+- **Session Data**: Store session-specific information
+- **Resume Functionality**: Resume learning from last session
+- **Course Sessions**: Session tracking per course
+
+### Incomplete Tasks
+
+- **Task Tracking**: Identify incomplete lectures and assignments
+- **Incomplete Tasks List**: Get list of pending tasks
+- **Course-Specific Tasks**: Filter tasks by course
+- **Resume Data**: Get comprehensive resume information
+
+### Notification Integration
+
+- **Progress Notifications**: Automatic notifications for incomplete tasks
+- **Notification Checking**: Manual trigger for notification updates
+
+---
+
+## 📝 Assessment & Evaluation
+
+### Quiz System
+
+#### Quiz Management
+
+- **Create Quizzes**: Build quizzes with time limits and attempts
+- **Update Quizzes**: Modify quiz settings
+- **Delete Quizzes**: Remove quizzes
+- **Quiz Listing**: View all quizzes for a course
+- **Quiz Details**: Retrieve complete quiz information
+
+#### Question Management
+
+- **Question Types Supported**:
+  - **Multiple Choice**: Single or multiple correct answers
+  - **True/False**: Boolean questions
+  - **Short Answer**: Text-based answers
+  - **Essay**: Long-form written responses
+
+#### Question Operations
+
+- **Create Questions**: Add questions to quizzes
+- **Question Options**: Create answer choices/options
+- **Update Questions**: Modify question text and settings
+- **Update Options**: Edit answer options
+- **Delete Questions**: Remove questions
+- **Delete Options**: Remove answer options
+- **Question Details**: Retrieve complete question information
+
+#### Quiz Attempts
+
+- **Submit Quiz**: Complete and submit quiz attempts
+- **Validate Submission**: Pre-submission validation
+- **Attempt Tracking**: Record all quiz attempts
+- **Quiz Results**: View scores and feedback
+- **Attempt History**: Retrieve past attempts
+- **Attempt Details**: Get specific attempt information
+
+#### Quiz Analytics
+
+- **User Statistics**: Quiz performance analytics per user
+- **Quiz Results**: Scoring and feedback
+- **Performance Tracking**: Monitor student performance
+
+### Assignment System
+
+#### Assignment Management
+
+- **Create Assignments**: Build assignments with due dates and descriptions
+- **Update Assignments**: Modify assignment details
+- **Delete Assignments**: Remove assignments
+- **Assignment Listing**: View all assignments for a course
+- **Assignment Details**: Retrieve complete assignment information
+
+#### Assignment Submissions
+
+- **Submit Assignments**: Upload files or text submissions
+- **Update Submissions**: Modify existing submissions
+- **Submission Tracking**: Track all submissions per assignment
+- **Submission Details**: Retrieve submission information
+
+#### Grading
+
+- **Grade Submissions**: Assign grades and feedback (Instructor/Admin only)
+- **Grading Interface**: Complete grading workflow
+- **Submission Status**: Track submission states (pending, graded, etc.)
+
+---
+
+## 📁 File Storage & Submissions
+
+### File Upload
+
+- **Single File Upload**:
+  - Upload individual files with validation
+  - MIME type validation
+  - File size limits
+  - Automatic file naming
+  - Secure file storage
+
+- **Multiple File Upload**:
+  - Batch upload up to 10 files
+  - Individual validation per file
+  - Bulk file processing
+
+### File Management
+
+- **File Information**: Get file metadata (size, type, upload date)
+- **File Deletion**: Remove uploaded files
+- **File Access Control**: User-specific file access
+- **Supported File Types**: Comprehensive list of acceptable formats
+
+### Submission Types
+
+- **Assignment Submissions**: Files for assignments
+- **Quiz Attachments**: Files associated with quizzes
+- **Project Submissions**: Project files
+- **Exam Materials**: Exam-related documents
+
+### File Validation
+
+- **MIME Type Checking**: Validate file types
+- **File Size Limits**: Enforce size constraints
+- **Extension Validation**: Ensure proper file extensions
+- **Security Scanning**: Basic file security checks
+
+### Storage Features
+
+- **Secure Storage**: Protected file storage
+- **URL Generation**: Accessible file URLs
+- **File Metadata**: Complete file information tracking
+- **User Isolation**: Files organized by user ID
+
+---
+
+## 💬 Real-Time Communication
+
+### Messaging System
+
+#### Threads (Discussion Forums)
+
+- **Create Threads**: Start new discussion threads
+- **Thread Management**: Update and delete threads
+- **Thread Listing**: View all threads (optionally filtered by course)
+- **Thread Details**: Retrieve complete thread information
+- **Course-Specific Threads**: Organize discussions by course
+
+#### Messages
+
+- **Send Messages**: Post messages in threads
+- **Message Updates**: Edit existing messages
+- **Message Deletion**: Remove messages
+- **Message History**: View all messages in a thread
+- **Real-Time Delivery**: WebSocket-based instant messaging
+
+### WebSocket Gateway
+
+- **Real-Time Communication**: Socket.IO integration
+- **Live Updates**: Instant message delivery
+- **Connection Management**: Handle WebSocket connections
+- **Event Broadcasting**: Push updates to connected clients
+
+---
+
+## 🔔 Notifications
+
+### Notification Management
+
+- **Get Notifications**: Retrieve all notifications for current user
+- **Unread Notifications**: Filter unread notifications
+- **Notification Details**: View specific notification information
+- **Update Notifications**: Mark as read/unread
+- **Delete Notifications**: Remove individual notifications
+
+### Notification Operations
+
+- **Mark All as Read**: Bulk read status update
+- **Delete All**: Clear all notifications
+- **Notification Types**: Different notification categories
+- **Notification Status**: Track read/unread states
+
+### Notification Features
+
+- **Intelligent Notifications**: Automated notifications for incomplete tasks
+- **Progress-Based Alerts**: Notifications based on learning progress
+- **Real-Time Delivery**: WebSocket-based notification delivery
+- **Notification History**: Persistent notification storage
+
+---
+
+## 🛠️ Administration
+
+### System Statistics
+
+- **Admin Dashboard**: Comprehensive system overview
+- **Course Statistics**: Analytics per course
+- **User Statistics**: User metrics and analytics
+- **Organization Statistics**: Per-organization metrics
+
+### User Management
+
+- **Create Enrollments**: Manually enroll users in courses
+- **Update User Roles**: Change user permissions
+- **Delete Users**: Remove user accounts
+- **User Analytics**: Track user activity and engagement
+
+### System Operations
+
+- **System Health**: Monitor system status
+- **Database Connectivity**: Check database health
+- **Performance Metrics**: System performance monitoring
+- **Audit Logging**: Track administrative actions
+
+### Access Control
+
+- **Role-Based Permissions**: Granular access control
+- **Admin-Only Operations**: Restricted administrative functions
+- **Super Admin Privileges**: Cross-organization access
+- **Permission Verification**: Security checks for all operations
+
+---
+
+## 🏥 System Health & Monitoring
+
+### Health Checks
+
+- **Health Endpoint**: System health status endpoint
+- **Database Health**: Database connectivity checks
+- **Service Status**: Individual service monitoring
+- **Uptime Tracking**: System uptime information
+
+### Monitoring Features
+
+- **System Metrics**: Memory and CPU usage
+- **Request Tracking**: Request ID generation and tracking
+- **Error Logging**: Comprehensive error tracking
+- **Performance Monitoring**: Response time tracking
+
+### Logging
+
+- **Structured Logging**: JSON-based logging with Pino
+- **Log Levels**: Configurable logging levels (info, debug, error, etc.)
+- **Development Logs**: Pretty-printed logs in development
+- **Production Logs**: Optimized JSON logs in production
+- **Request Logging**: Full request/response logging
+
+---
+
+## 🔗 API Features
+
+### API Documentation
+
+- **Swagger/OpenAPI**: Interactive API documentation
+- **Endpoint Documentation**: Complete endpoint descriptions
+- **Request/Response Schemas**: Detailed schema definitions
+- **Authentication Info**: Bearer token authentication documentation
+- **Try It Out**: Interactive API testing interface
+
+### API Standards
+
+- **RESTful Design**: Standard REST API patterns
+- **Consistent Response Format**: Standardized response structures
+- **Error Handling**: Comprehensive error responses
+- **Status Codes**: Proper HTTP status code usage
+- **API Versioning**: Versioned API endpoints (`/api/v1`)
+
+### Global Features
+
+- **Request Validation**: Automatic DTO validation
+- **Exception Filtering**: Centralized error handling
+- **Request ID**: Unique request tracking
+- **CORS Support**: Cross-origin request handling
+- **Static File Serving**: Serve uploaded files
+
+---
+
+## 📊 Data Models & Relationships
+
+### Core Entities
+
+- **User**: User accounts with roles and profiles
+- **Organization**: Multi-tenant organizations
+- **Course**: Course containers with metadata
+- **Module**: Course sections
+- **Lecture**: Certification units within modules
+- **Content**: Various content types (text, video, audio, files)
+- **Progress**: Detailed progress tracking
+- **UserSession**: Active learning sessions
+
+### Assessment Entities
+
+- **Quiz**: Assessment containers
+- **Question**: Quiz questions with various types
+- **Option**: Answer choices for questions
+- **QuizAttempt**: Student quiz submissions
+- **Assignment**: Assignment containers
+- **AssignmentSubmission**: Student assignment submissions
+
+### Communication Entities
+
+- **Thread**: Discussion threads
+- **Message**: Individual messages in threads
+- **Notification**: System notifications
+
+### Security Entities
+
+- **RefreshToken**: JWT refresh tokens
+- **PasswordResetToken**: Password reset tokens
+- **MfaBackupCode**: MFA backup codes
+- **SsoConfiguration**: Organization SSO settings
+- **OrganizationInvitation**: User invitation records
+
+---
+
+## 🔒 Security & Privacy
+
+### Data Protection
+
+- **Data Isolation**: Complete separation between organizations
+- **Access Control**: Role-based data access
+- **Secure File Storage**: Protected file access
+- **Encrypted Tokens**: Secure token handling
+- **Password Security**: Hashed passwords with bcrypt
+
+### API Security
+
+- **Authentication Required**: Protected endpoints
+- **Token Validation**: JWT token verification
+- **Rate Limiting**: Request throttling
+- **Input Sanitization**: XSS protection
+- **SQL Injection Prevention**: Parameterized queries
+
+### Compliance Features
+
+- **User Privacy**: User data protection
+- **Organization Isolation**: Multi-tenant security
+- **Audit Trails**: Action logging
+- **Secure Email**: Encrypted email communication
+
+---
+
+## 🚀 Performance & Scalability
+
+### Optimization Features
+
+- **Database Indexing**: Optimized database queries
+- **Connection Pooling**: Efficient database connections
+- **Caching Ready**: Architecture supports caching
+- **Efficient Queries**: Optimized data retrieval
+
+### Scalability
+
+- **Multi-Tenant Design**: Supports multiple organizations
+- **Stateless API**: Horizontally scalable
+- **Database Migrations**: Version-controlled schema
+- **Modular Architecture**: Easily extensible
+
+---
+
+## 📱 Integration Capabilities
+
+### External Services
+
+- **Resend API**: Email delivery service
+- **Firebase Storage**: Optional cloud file storage
+- **SSO Providers**: Google, Microsoft, SAML
+- **OAuth 2.0**: Standard OAuth integration
+
+### Webhook Support
+
+- **Event Hooks**: Extensible event system
+- **Notification Hooks**: External notification delivery
+- **Integration Points**: API integration capabilities
+
+---
+
+## 📚 Additional Documentation
+
+For detailed implementation guides and user journeys, see:
+
+- **[Student Journey](docs/STUDENT_JOURNEY.md)** - Complete student experience
+- **[Instructor Journey](docs/INSTRUCTOR_JOURNEY.md)** - Instructor workflow
+- **[Admin Journey](docs/ADMIN_JOURNEY.md)** - Administrative functions
+- **[Super Admin Journey](docs/SUPER_ADMIN_JOURNEY.md)** - System-wide management
+- **[Enhanced Authentication](docs/ENHANCED_AUTH.md)** - SSO, MFA, password reset
+- **[Progress Tracking](docs/ENHANCED_PROGRESS_TRACKING.md)** - Auto-save and notifications
+- **[Document Submission](docs/DOCUMENT_SUBMISSION_MODULE.md)** - File upload system
+- **[Client Documentation](docs/CLIENT.md)** - Frontend integration guide
+
+---
+
+## 🎯 Feature Summary
+
+| Category          | Feature Count | Key Features                                       |
+| ----------------- | ------------- | -------------------------------------------------- |
+| Authentication    | 15+           | Registration, Login, MFA, SSO, Password Reset Code |
+| Course Management | 20+           | Courses, Modules, Lectures, Content Management     |
+| Progress Tracking | 12+           | Progress Updates, Auto-Save, Sessions, Analytics   |
+| Assessments       | 25+           | Quizzes, Questions, Assignments, Grading           |
+| Communication     | 10+           | Messaging, Threads, Real-Time Chat                 |
+| File Management   | 8+            | Upload, Storage, Validation, Deletion              |
+| Notifications     | 8+            | Real-Time Notifications, Task Alerts               |
+| Administration    | 10+           | Statistics, User Management, System Health         |
+| Organizations     | 8+            | Multi-Tenant, Invitations, SSO Config              |
+
+**Total Features: 120+**
+
+---
+
+## 🔄 API Endpoints Overview
+
+### Authentication (`/api/v1/auth`)
+
+- `POST /register` - User registration
+- `POST /login` - User login
+- `POST /login/select-organization` - Complete login with organization
+- `POST /refresh` - Refresh access token
+- `POST /logout` - User logout
+- `POST /forgot-password` - Request password reset
+- `POST /reset-password` - Reset password
+- `POST /mfa/setup` - Setup MFA
+- `POST /mfa/enable` - Enable MFA
+- `POST /mfa/verify` - Verify MFA token
+- `POST /mfa/disable` - Disable MFA
+- `POST /sso/login` - Initiate SSO login
+- `GET /sso/callback` - SSO callback handler
+
+### Courses (`/api/v1/courses`)
+
+- `POST /` - Create course
+- `GET /` - List courses
+- `GET /:id` - Get course details
+- `PUT /:id` - Update course
+- `DELETE /:id` - Delete course
+- `POST /:courseId/modules` - Create module
+- `GET /:courseId/modules` - List modules
+- `PUT /modules/:id` - Update module
+- `DELETE /modules/:id` - Delete module
+- `POST /modules/:moduleId/lectures` - Create lecture
+- `GET /modules/:moduleId/lectures` - List lectures
+- `PUT /lectures/:id` - Update lecture
+- `DELETE /lectures/:id` - Delete lecture
+- `POST /lectures/:lectureId/contents` - Create content
+- `GET /lectures/:lectureId/contents` - List contents
+- `PUT /contents/:id` - Update content
+- `DELETE /contents/:id` - Delete content
+
+### Progress (`/api/v1/progress`)
+
+- `PUT /lectures/:lectureId` - Update progress
+- `GET /lectures/:lectureId` - Get progress
+- `GET /courses/:courseId` - Get course progress
+- `GET /users/:userId` - Get user progress
+- `GET /me` - Get current user progress
+- `POST /lectures/:lectureId/auto-save` - Auto-save progress
+- `GET /sessions` - Get user sessions
+- `GET /sessions/course/:courseId` - Get course session
+- `GET /courses/:courseId/with-session` - Get progress with session
+- `GET /incomplete-tasks` - Get incomplete tasks
+- `GET /incomplete-tasks/course/:courseId` - Get course incomplete tasks
+- `GET /resume` - Get resume data
+- `POST /check-notifications` - Check and notify incomplete tasks
+
+### Quizzes (`/api/v1/quizzes`)
+
+- `POST /courses/:courseId` - Create quiz
+- `GET /courses/:courseId` - List quizzes
+- `GET /:id` - Get quiz details
+- `PUT /:id` - Update quiz
+- `DELETE /:id` - Delete quiz
+- `POST /:quizId/questions` - Create question
+- `GET /questions/:id` - Get question details
+- `PUT /questions/:id` - Update question
+- `DELETE /questions/:id` - Delete question
+- `POST /questions/:questionId/options` - Create option
+- `PUT /options/:id` - Update option
+- `DELETE /options/:id` - Delete option
+- `POST /:quizId/validate` - Validate submission
+- `POST /:quizId/attempts` - Submit quiz attempt
+- `GET /:quizId/attempts` - Get quiz attempts
+- `GET /attempts/:id` - Get attempt details
+- `GET /user/statistics` - Get user quiz statistics
+
+### Assignments (`/api/v1/assignments`)
+
+- `POST /courses/:courseId` - Create assignment
+- `GET /courses/:courseId` - List assignments
+- `GET /:id` - Get assignment details
+- `PUT /:id` - Update assignment
+- `DELETE /:id` - Delete assignment
+- `POST /:assignmentId/submit` - Submit assignment
+- `PUT /:assignmentId/submit` - Update submission
+- `GET /:assignmentId/submissions` - Get submissions
+- `GET /submissions/:id` - Get submission details
+- `PUT /submissions/:id/grade` - Grade submission
+
+### File Storage (`/api/v1/storage`)
+
+- `POST /upload` - Upload single file
+- `POST /upload-multiple` - Upload multiple files
+- `DELETE /file` - Delete file
+- `GET /file-info` - Get file information
+- `GET /supported-types` - Get supported file types
+
+### Messaging (`/api/v1/messaging`)
+
+- `POST /threads` - Create thread
+- `GET /threads` - List threads
+- `GET /threads/:id` - Get thread details
+- `PUT /threads/:id` - Update thread
+- `DELETE /threads/:id` - Delete thread
+- `POST /threads/:threadId/messages` - Send message
+- `GET /threads/:threadId/messages` - Get messages
+- `PUT /messages/:id` - Update message
+- `DELETE /messages/:id` - Delete message
+
+### Notifications (`/api/v1/notifications`)
+
+- `GET /` - Get all notifications
+- `GET /unread` - Get unread notifications
+- `GET /:id` - Get notification details
+- `PUT /:id` - Update notification
+- `PUT /mark-all-read` - Mark all as read
+- `DELETE /:id` - Delete notification
+- `DELETE /` - Delete all notifications
+
+### Organizations (`/api/v1/organizations`)
+
+- `POST /` - Create organization
+- `GET /` - List organizations
+- `GET /slug/:slug` - Get organization by slug
+- `GET /:id` - Get organization details
+- `PUT /:id` - Update organization
+- `DELETE /:id` - Delete organization
+- `POST /:id/invite` - Invite user
+- `POST /accept-invitation` - Accept invitation
+- `GET /:id/stats` - Get organization statistics
+
+### Admin (`/api/v1/admin`)
+
+- `GET /stats` - Get system statistics
+- `GET /stats/courses` - Get course statistics
+- `GET /stats/users` - Get user statistics
+- `POST /enrollments` - Create enrollment
+- `PUT /users/:id/role` - Update user role
+- `DELETE /users/:id` - Delete user
+- `GET /health` - Get system health
+
+### Health (`/api/v1/health`)
+
+- `GET /` - System health check
+
+---
+
+**Last Updated**: Generated from codebase analysis  
+**API Version**: v1  
+**Total Endpoints**: 100+
+
+---
+
+For API documentation with interactive testing, visit: `http://localhost:8080/api` when the server is running.

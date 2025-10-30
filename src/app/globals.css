@@ -120,3 +120,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Utility to hide scrollbars while preserving scroll behavior */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Font utility for Bebas Neue from next/font */
+.font-bebas { font-family: var(--font-bebas-neue); }
