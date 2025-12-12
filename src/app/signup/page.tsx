@@ -1,3 +1,5 @@
+import Image from "next/image"
+import Link from "next/link"
 import { SignupForm } from "@/components/shared/signup-form"
 
 export default function SignupPage() {
@@ -5,9 +7,17 @@ export default function SignupPage() {
     <div className="grid h-svh overflow-hidden lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10 overflow-y-auto no-scrollbar">
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium pt-10">
-            <span className="font-bebas text-4xl leading-none tracking-wide">GLACQ</span>
-          </a>
+          <Link href="/" className="flex items-center gap-2 font-medium pt-10">
+            <div className="relative w-40 h-12">
+              <Image
+                src="/logos/pc_logo.png"
+                alt="ProjectCareer Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+          </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">

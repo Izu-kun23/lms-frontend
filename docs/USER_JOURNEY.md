@@ -40,19 +40,19 @@ Registration → Email Verification → Login → Profile Setup
    - **System Validation**: Unique email within organization
    - **Security**: Password hashed with bcrypt
    - **Authentication**: JWT tokens generated (access + refresh)
-   - **API Endpoint**: `POST /api/v1/auth/register`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/auth/register`
 
 2. **First Login**
    - **Input Required**: email, password, organizationId
    - **Authentication**: Credential validation
    - **Response**: User profile with organization details
    - **Token Management**: Access token expires in 15 minutes
-   - **API Endpoint**: `POST /api/v1/auth/login`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/auth/login`
 
 3. **Profile Completion**
    - **Optional Fields**: matricNumber, profile information
    - **Customization**: User preferences and settings
-   - **API Endpoint**: `PUT /api/v1/users/profile`
+   - **API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/users/profile`
 
 ### Phase 2: Course Discovery & Enrollment
 
@@ -66,10 +66,10 @@ Browse Available Courses → Request Enrollment → Admin Approval → Access Gr
    - **Access**: Courses in user's organization
    - **Information Displayed**: title, code, summary, instructor, coverUrl
    - **Enrollment Status**: Visual indicators for enrollment status
-   - **API Endpoint**: `GET /api/v1/courses`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses`
 
 2. **Enrollment Process**
-   - **Admin Action**: Admin creates enrollment via `POST /api/v1/admin/enrollments`
+   - **Admin Action**: Admin creates enrollment via `POST https://genlmsapi-production.up.railway.app/api/admin/enrollments`
    - **Enrollment Status**: ACTIVE, DROPPED, COMPLETED
    - **Validation**: Unique constraint prevents duplicate enrollments
    - **Database**: Enrollment record created with userId, courseId, status
@@ -78,7 +78,7 @@ Browse Available Courses → Request Enrollment → Admin Approval → Access Gr
    - **Access Control**: Students can only access enrolled courses
    - **Course Structure**: Organization → Course → Module → Lecture → Content
    - **Progress Tracking**: Real-time progress updates
-   - **API Endpoint**: `GET /api/v1/courses/:id`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses/:id`
 
 ### Phase 3: Learning Experience
 
@@ -92,19 +92,19 @@ Access Course → Navigate Modules → Complete Lectures → Track Progress
    - **Dashboard**: Access course overview and structure
    - **Module View**: Hierarchical content organization
    - **Progress Indicators**: Visual progress tracking
-   - **API Endpoint**: `GET /api/v1/courses/:id/modules`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses/:id/modules`
 
 2. **Lecture Consumption**
    - **Content Types**: TEXT, VIDEO, AUDIO, FILE, LIVE
    - **Progress Marking**: Mark lectures as complete
    - **Real-time Updates**: Progress automatically tracked
-   - **API Endpoint**: `PUT /api/v1/progress/lectures/:lectureId`
+   - **API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/progress/lectures/:lectureId`
 
 3. **Progress Tracking**
    - **Real-time Updates**: Instant progress synchronization
    - **Course Completion**: Percentage-based completion tracking
    - **Lecture Status**: Individual lecture completion status
-   - **API Endpoint**: `GET /api/v1/progress/me`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/progress/me`
 
 ### Phase 4: Assessment & Interaction
 
@@ -119,13 +119,13 @@ Take Quizzes → Submit Assignments → Participate in Discussions → Receive F
    - **Question Types**: MCQ, TRUE_FALSE, SHORT_ANSWER
    - **Attempts**: Multiple attempts allowed
    - **Scoring**: Immediate feedback and scoring
-   - **API Endpoint**: `POST /api/v1/quizzes/:id/attempts`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/quizzes/:id/attempts`
 
 2. **Assignment Submission**
    - **Assignment Details**: Description, due dates, requirements
    - **Submission Types**: File uploads or text responses
    - **Feedback**: Receive grades and instructor feedback
-   - **API Endpoint**: `POST /api/v1/assignments/:id/submissions`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/assignments/:id/submissions`
 
 3. **Discussion Participation**
    - **Course Threads**: Course-specific discussion threads
@@ -151,7 +151,7 @@ Receive Notifications → Participate in Discussions → Get Updates
    - **Threads**: Course-specific discussion threads
    - **Real-time**: Instant message delivery
    - **History**: Message persistence and retrieval
-   - **API Endpoint**: `GET /api/v1/messaging/threads/:id/messages`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/messaging/threads/:id/messages`
 
 ---
 
@@ -169,22 +169,22 @@ Create Course → Add Modules → Create Lectures → Upload Content
    - **Required Fields**: title, code, summary
    - **Optional Fields**: coverUrl
    - **Organization**: Automatically assigned to instructor's organization
-   - **API Endpoint**: `POST /api/v1/courses`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/courses`
 
 2. **Content Structure**
    - **Modules**: Add modules with titles and ordering
    - **Lectures**: Create lectures within modules
    - **Content**: Upload various content types
    - **API Endpoints**:
-     - `POST /api/v1/courses/:id/modules`
-     - `POST /api/v1/modules/:id/lectures`
-     - `POST /api/v1/lectures/:id/contents`
+     - `POST https://genlmsapi-production.up.railway.app/api/courses/:id/modules`
+     - `POST https://genlmsapi-production.up.railway.app/api/modules/:id/lectures`
+     - `POST https://genlmsapi-production.up.railway.app/api/lectures/:id/contents`
 
 3. **Content Management**
    - **Organization**: Content ordered by index
    - **Metadata**: Additional information for media content
    - **Preview**: Content preview before publishing
-   - **API Endpoint**: `PUT /api/v1/contents/:id`
+   - **API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/contents/:id`
 
 ### Phase 2: Student Management & Monitoring
 
@@ -198,13 +198,13 @@ View Enrolled Students → Monitor Progress → Track Engagement
    - **Student List**: View all enrolled students
    - **Status Tracking**: Monitor enrollment status
    - **Activity Monitoring**: Track student engagement
-   - **API Endpoint**: `GET /api/v1/courses/:id/enrollments`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses/:id/enrollments`
 
 2. **Progress Monitoring**
    - **Real-time Tracking**: Live progress updates
    - **Analytics**: Course completion statistics
    - **Individual Reports**: Per-student progress reports
-   - **API Endpoint**: `GET /api/v1/progress/users/:userId`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/progress/users/:userId`
 
 ### Phase 3: Assessment Creation & Grading
 
@@ -218,19 +218,19 @@ Create Quizzes → Design Assignments → Grade Submissions → Provide Feedback
    - **Question Design**: MCQ, TRUE_FALSE, SHORT_ANSWER
    - **Answer Configuration**: Correct answers and point values
    - **Settings**: Quiz configuration and publishing
-   - **API Endpoint**: `POST /api/v1/quizzes`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/quizzes`
 
 2. **Assignment Management**
    - **Assignment Creation**: Descriptions and requirements
    - **Due Dates**: Time-based assignment management
    - **Grading**: Submission review and feedback
-   - **API Endpoint**: `POST /api/v1/assignments`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/assignments`
 
 3. **Grading System**
    - **Submission Review**: Student submission evaluation
    - **Grade Assignment**: Numerical and feedback grading
    - **Progress Tracking**: Grading completion status
-   - **API Endpoint**: `PUT /api/v1/assignments/:id/submissions/:submissionId`
+   - **API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/assignments/:id/submissions/:submissionId`
 
 ### Phase 4: Communication & Engagement
 
@@ -250,7 +250,7 @@ Moderate Discussions → Send Announcements → Provide Support
    - **Course-wide Notifications**: Broadcast to all enrolled students
    - **Updates**: Course change notifications
    - **Information Sharing**: Important course information
-   - **API Endpoint**: `POST /api/v1/notifications`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/notifications`
 
 ---
 
@@ -268,19 +268,19 @@ Create Users → Manage Roles → Handle Enrollments → Monitor Activity
    - **Account Setup**: Create new user accounts
    - **Role Assignment**: Assign appropriate roles (STUDENT, INSTRUCTOR, ADMIN)
    - **Organization Context**: Set organization membership
-   - **API Endpoint**: `POST /api/v1/admin/users`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/admin/users`
 
 2. **Role Management**
    - **Role Updates**: Modify user roles
    - **Permission Management**: Control access permissions
    - **Role Transitions**: Handle role changes
-   - **API Endpoint**: `PUT /api/v1/admin/users/:id/role`
+   - **API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/admin/users/:id/role`
 
 3. **Enrollment Management**
    - **Enrollment Creation**: Create course enrollments
    - **Status Management**: Manage enrollment status
    - **Request Handling**: Process enrollment requests
-   - **API Endpoint**: `POST /api/v1/admin/enrollments`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/admin/enrollments`
 
 ### Phase 2: Course & Content Oversight
 
@@ -294,13 +294,13 @@ Monitor Courses → Manage Instructors → Oversee Content Quality
    - **Course View**: All courses in organization
    - **Quality Monitoring**: Course content quality assessment
    - **Availability Management**: Course access control
-   - **API Endpoint**: `GET /api/v1/courses`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses`
 
 2. **Instructor Management**
    - **Instructor Assignment**: Assign instructors to courses
    - **Performance Monitoring**: Track instructor effectiveness
    - **Support Provision**: Provide instructor assistance
-   - **API Endpoint**: `GET /api/v1/users?role=INSTRUCTOR`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/users?role=INSTRUCTOR`
 
 ### Phase 3: Analytics & Reporting
 
@@ -314,19 +314,19 @@ View System Statistics → Generate Reports → Monitor Performance
    - **Active Users**: Current user activity counts
    - **Engagement Metrics**: User interaction levels
    - **Activity Tracking**: Last activity timestamps
-   - **API Endpoint**: `GET /api/v1/admin/stats/users`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/admin/stats/users`
 
 2. **Course Analytics**
    - **Enrollment Statistics**: Course enrollment data
    - **Completion Rates**: Course completion metrics
    - **Performance Metrics**: Student performance data
-   - **API Endpoint**: `GET /api/v1/admin/stats/courses`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/admin/stats/courses`
 
 3. **System Monitoring**
    - **Usage Statistics**: Platform utilization data
    - **Performance Metrics**: System performance indicators
    - **Health Monitoring**: System health status
-   - **API Endpoint**: `GET /api/v1/health`
+   - **API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/health`
 
 ---
 
@@ -344,7 +344,7 @@ Manage Organizations → Oversee All Users → Monitor System Health
    - **Organization Creation**: Create and configure organizations
    - **Settings Management**: Organization-level configuration
    - **Issue Resolution**: Handle organization-level problems
-   - **API Endpoint**: `POST /api/v1/organizations`
+   - **API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/organizations`
 
 2. **Cross-Organization Access**
    - **Data Access**: Access any organization's data
@@ -463,37 +463,37 @@ Establish Connection → Authenticate → Join Rooms → Receive Updates
 
 ### Authentication
 
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/refresh` - Token refresh
-- `POST /api/v1/auth/logout` - User logout
+- `POST https://genlmsapi-production.up.railway.app/api/auth/register` - User registration
+- `POST https://genlmsapi-production.up.railway.app/api/auth/login` - User login
+- `POST https://genlmsapi-production.up.railway.app/api/auth/refresh` - Token refresh
+- `POST https://genlmsapi-production.up.railway.app/api/auth/logout` - User logout
 
 ### Courses
 
-- `GET /api/v1/courses` - List courses
-- `POST /api/v1/courses` - Create course (Instructor/Admin)
-- `GET /api/v1/courses/:id` - Get course details
-- `PUT /api/v1/courses/:id` - Update course
+- `GET https://genlmsapi-production.up.railway.app/api/courses` - List courses
+- `POST https://genlmsapi-production.up.railway.app/api/courses` - Create course (Instructor/Admin)
+- `GET https://genlmsapi-production.up.railway.app/api/courses/:id` - Get course details
+- `PUT https://genlmsapi-production.up.railway.app/api/courses/:id` - Update course
 
 ### Progress
 
-- `GET /api/v1/progress/me` - Get user progress
-- `PUT /api/v1/progress/lectures/:id` - Update lecture progress
-- `GET /api/v1/progress/users/:id` - Get user progress (Admin/Instructor)
+- `GET https://genlmsapi-production.up.railway.app/api/progress/me` - Get user progress
+- `PUT https://genlmsapi-production.up.railway.app/api/progress/lectures/:id` - Update lecture progress
+- `GET https://genlmsapi-production.up.railway.app/api/progress/users/:id` - Get user progress (Admin/Instructor)
 
 ### Messaging
 
 - WebSocket connection for real-time messaging
-- `GET /api/v1/messaging/threads` - List threads
-- `POST /api/v1/messaging/threads` - Create thread
-- `GET /api/v1/messaging/threads/:id/messages` - Get messages
+- `GET https://genlmsapi-production.up.railway.app/api/messaging/threads` - List threads
+- `POST https://genlmsapi-production.up.railway.app/api/messaging/threads` - Create thread
+- `GET https://genlmsapi-production.up.railway.app/api/messaging/threads/:id/messages` - Get messages
 
 ### Admin
 
-- `POST /api/v1/admin/users` - Create user
-- `POST /api/v1/admin/enrollments` - Create enrollment
-- `GET /api/v1/admin/stats/users` - User statistics
-- `GET /api/v1/admin/stats/courses` - Course statistics
+- `POST https://genlmsapi-production.up.railway.app/api/admin/users` - Create user
+- `POST https://genlmsapi-production.up.railway.app/api/admin/enrollments` - Create enrollment
+- `GET https://genlmsapi-production.up.railway.app/api/admin/stats/users` - User statistics
+- `GET https://genlmsapi-production.up.railway.app/api/admin/stats/courses` - Course statistics
 
 ---
 

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/hooks/useAuth"
+import { getSchools } from "@/lib/school-service"
 
 export function LoginForm({
   className,
@@ -18,7 +19,53 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [error, setError] = React.useState<string>("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [schools, setSchools] = React.useState<Array<{ id: string; name: string; slug: string }>>([])
+  const [isLoadingSchools, setIsLoadingSchools] = React.useState(true)
+  const [schoolsError, setSchoolsError] = React.useState<string>("")
   const { login } = useAuth()
+
+  // Load schools from cache (optional for login)
+  React.useEffect(() => {
+    let isMounted = true
+
+    const loadSchools = async () => {
+      setIsLoadingSchools(true)
+      setSchoolsError("")
+
+      try {
+        const { schools: fetchedSchools, fromCache, stale } = await getSchools()
+        if (!isMounted) return
+
+        if (fetchedSchools.length > 0) {
+          setSchools(fetchedSchools.map((school) => ({ id: school.id, name: school.name, slug: school.slug })))
+        } else {
+          setSchools([])
+          // Don't show error - school selection is optional
+        }
+
+        if (stale && fromCache) {
+          // Don't show error, just log it
+          console.warn("School list may be outdated")
+        }
+      } catch (error) {
+        console.error("Error loading schools:", error)
+        if (isMounted) {
+          setSchools([])
+          // Don't show error - school selection is optional for login
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSchools(false)
+        }
+      }
+    }
+
+    loadSchools()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -29,9 +76,13 @@ export function LoginForm({
       const formData = new FormData(event.currentTarget)
       const email = formData.get("email") as string
       const password = formData.get("password") as string
-
-      // Students don't need to select organization - backend returns it from their account
-      await login({ email, password })
+      const schoolId = formData.get("schoolId") as string
+      
+      await login({ 
+        email, 
+        password,
+        schoolId: schoolId || undefined 
+      })
     } catch (err: any) {
       setError(err.message || "Login failed. Please try again.")
       setIsSubmitting(false)
@@ -49,35 +100,54 @@ export function LoginForm({
         </div>
         <Field>
           <FieldLabel htmlFor="email">Email Address</FieldLabel>
-          <Input 
-            id="email" 
-            name="email" 
-            type="email" 
-            placeholder="student@university.edu" 
-            required 
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="student@university.edu"
+            required
+            className="rounded-full focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
-          <FieldDescription>
-            Enter the email address associated with your student account.
-          </FieldDescription>
         </Field>
         <Field>
           <div className="flex items-center">
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <a
               href="/forgot-password"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
+              className="ml-auto text-sm underline-offset-4 hover:underline text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
             >
               Forgot your password?
             </a>
           </div>
-          <Input 
-            id="password" 
-            name="password" 
-            type="password" 
+          <Input
+            id="password"
+            name="password"
+            type="password"
             placeholder="Enter your password"
-            required 
+            required
+            className="rounded-full focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
         </Field>
+        {schools.length > 0 && (
+          <Field>
+            <FieldLabel htmlFor="schoolId">School (Optional)</FieldLabel>
+            <select
+              id="schoolId"
+              name="schoolId"
+              className="flex h-10 w-full rounded-full border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isLoadingSchools}
+            >
+              <option value="">
+                {isLoadingSchools ? "Loading schools..." : "Select your school (optional)"}
+              </option>
+              {schools.map((school) => (
+                <option key={school.id} value={school.id}>
+                  {school.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
         <Field>
           <div className="flex items-center gap-2">
             <input id="remember" name="remember" type="checkbox" className="h-4 w-4 rounded border" />
@@ -92,7 +162,7 @@ export function LoginForm({
         <Field>
           <Button
             type="submit"
-            className="bg-black text-white hover:bg-black/90 w-full"
+            className="bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 w-full rounded-full"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Signing in..." : "Login to Dashboard"}
@@ -100,7 +170,7 @@ export function LoginForm({
         </Field>
         <FieldSeparator>Or continue with</FieldSeparator>
         <Field>
-          <Button variant="outline" type="button">
+          <Button variant="outline" type="button" className="rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-4 w-4">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
               <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.4 16 18.8 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.1 4 9.3 8.5 6.3 14.7z"/>
@@ -110,19 +180,13 @@ export function LoginForm({
             Login with Google
           </Button>
           <FieldDescription className="text-center">
-            Don&apos;t have an account?{" "}
-            <a href="/signup" className="underline underline-offset-4">
-              Sign up
-            </a>
+            Don&apos;t have an account? <a href="/signup" className="underline underline-offset-4">Sign up</a>
           </FieldDescription>
         </Field>
         <FieldSeparator>Or</FieldSeparator>
         <Field>
           <FieldDescription className="text-center">
-            Admin or super admin?{" "}
-            <a href="/admin/login" className="underline underline-offset-4 font-medium">
-              Admin Login
-            </a>
+            Admin or super admin? <a href="/admin/login" className="underline underline-offset-4 font-medium">Admin Login</a>
           </FieldDescription>
         </Field>
       </FieldGroup>

@@ -26,32 +26,32 @@ Students are the primary learners in the LMS system. They enroll in courses, con
 **Steps**:
 
 1. **Navigate to Registration**
-   - Access the registration page
-   - Choose organization context
+- Access the registration page
+- Choose organization context
 
 2. **Provide Information**
-   - **Required Fields**:
-     - Email address (must be unique within organization)
-     - Password (minimum security requirements)
-     - First name
-     - Last name
-     - Organization ID
-   - **Optional Fields**:
-     - Matriculation number
-     - Profile information
+- **Required Fields**:
+  - Email address (must be unique within organization)
+  - Password (minimum security requirements)
+  - First name
+  - Last name
+  - Organization ID
+- **Optional Fields**:
+  - Matriculation number
+  - Profile information
 
 3. **System Processing**
-   - Email uniqueness validation within organization
-   - Password hashing with bcrypt
-   - User account creation
-   - JWT token generation (access + refresh tokens)
+- Email uniqueness validation within organization
+- Password hashing with bcrypt
+- User account creation
+- JWT token generation (access + refresh tokens)
 
 4. **Registration Confirmation**
    - Account created successfully
    - Login credentials provided
    - Next steps guidance
 
-**API Endpoint**: `POST /api/v1/auth/register`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/auth/register`
 
 **Request Body**:
 
@@ -96,9 +96,9 @@ Students are the primary learners in the LMS system. They enroll in courses, con
 **Steps**:
 
 1. **Enter Credentials**
-   - Email address
-   - Password
-   - Organization context
+- Email address
+- Password
+- Organization context
 
 2. **Authentication Process**
    - Credential validation
@@ -115,7 +115,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Course overview
    - Quick actions available
 
-**API Endpoint**: `POST /api/v1/auth/login`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/auth/login`
 
 **Request Body**:
 
@@ -147,7 +147,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Email verification (if required)
    - Profile completion status
 
-**API Endpoint**: `PUT /api/v1/users/profile`
+**API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/users/profile`
 
 ---
 
@@ -177,7 +177,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Assessment types
    - Estimated duration
 
-**API Endpoint**: `GET /api/v1/courses`
+**API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses`
 
 **Response**:
 
@@ -217,7 +217,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
 
 **Note**: Enrollment is typically managed by administrators through the admin interface.
 
-**API Endpoint**: `POST /api/v1/admin/enrollments` (Admin only)
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/admin/enrollments` (Admin only)
 
 **Request Body**:
 
@@ -244,7 +244,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Course structure navigation
    - Content access
 
-**API Endpoint**: `GET /api/v1/courses/:id`
+**API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses/:id`
 
 ---
 
@@ -271,7 +271,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Sequential learning path
    - Progress indicators
 
-**API Endpoint**: `GET /api/v1/courses/:id/modules`
+**API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses/:id/modules`
 
 **Response**:
 
@@ -324,7 +324,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Download files
    - Take notes (if supported)
 
-**API Endpoint**: `PUT /api/v1/progress/lectures/:lectureId`
+**API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/progress/lectures/:lectureId`
 
 **Request Body**:
 
@@ -355,7 +355,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Progress notifications
    - Completion celebrations
 
-**API Endpoint**: `GET /api/v1/progress/me`
+**API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/progress/me`
 
 **Response**:
 
@@ -401,7 +401,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Correct answers review
    - Performance feedback
 
-**API Endpoint**: `POST /api/v1/quizzes/:id/attempts`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/quizzes/:id/attempts`
 
 **Request Body**:
 
@@ -457,7 +457,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Review instructor comments
    - Understand performance
 
-**API Endpoint**: `POST /api/v1/assignments/:id/submissions`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/assignments/:id/submissions`
 
 **Request Body**:
 
@@ -568,7 +568,7 @@ Students are the primary learners in the LMS system. They enroll in courses, con
    - Typing indicators
    - Online presence
 
-**API Endpoint**: `GET /api/v1/messaging/threads/:id/messages`
+**API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/messaging/threads/:id/messages`
 
 ---
 

@@ -4,6 +4,7 @@ import React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { apiClient } from "@/lib/api"
+import { mergeCachedSchools } from "@/lib/school-store"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -44,19 +45,17 @@ export default function OnboardingPage() {
         adminStudentId: adminStudentIdValue ? Number.parseInt(adminStudentIdValue) : undefined,
       }
 
-      const org = await apiClient.createOrganization(data)
+      const org = await apiClient.createSchool(data)
       
-      // Store organization in localStorage for login dropdown
-      const existingOrgs = JSON.parse(localStorage.getItem("organizations") || "[]")
-      existingOrgs.push({ id: org.id, name: org.name, slug: org.slug })
-      localStorage.setItem("organizations", JSON.stringify(existingOrgs))
+      // Store school in localStorage for login dropdown
+      mergeCachedSchools([org])
       
       // Show success message and redirect to login
-      alert(`Organization "${org.name}" created successfully!\n\nYou can now login with your admin credentials.`)
+      alert(`School "${org.name}" created successfully!\n\nYou can now login with your admin credentials.`)
       
       router.push("/login")
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to create organization. Please try again.")
+      setError(err.response?.data?.message || "Failed to create school. Please try again.")
       setIsSubmitting(false)
     }
   }
@@ -71,7 +70,7 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-3xl font-bold">Welcome to LMS</h1>
             <p className="text-muted-foreground mt-2">
-              Create your first organization and admin account
+              Create your first school and admin account
             </p>
           </div>
         </div>
@@ -80,7 +79,7 @@ export default function OnboardingPage() {
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="name">
-                Organization Name <span className="text-red-500">*</span>
+                School Name <span className="text-red-500">*</span>
               </FieldLabel>
               <Input
                 id="name"
@@ -90,13 +89,13 @@ export default function OnboardingPage() {
                 required
               />
               <FieldDescription>
-                The display name for your organization
+                The display name for your school
               </FieldDescription>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="slug">
-                Organization Slug <span className="text-red-500">*</span>
+                School Slug <span className="text-red-500">*</span>
               </FieldLabel>
               <Input
                 id="slug"
@@ -124,7 +123,7 @@ export default function OnboardingPage() {
                 placeholder="techuniversity.edu"
               />
               <FieldDescription>
-                Email domain for automatic organization assignment
+                Email domain for automatic school assignment
               </FieldDescription>
             </Field>
 
@@ -135,14 +134,14 @@ export default function OnboardingPage() {
                 name="description"
                 rows={3}
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Brief description of your organization"
+                placeholder="Brief description of your school"
               />
             </Field>
 
             <div className="border-t pt-6 mt-6">
               <h3 className="text-lg font-semibold mb-4">Admin Account</h3>
               <FieldDescription className="mb-4">
-                Create your administrator account for this organization
+                Create your administrator account for this school
               </FieldDescription>
               
               <div className="space-y-4">
@@ -229,7 +228,7 @@ export default function OnboardingPage() {
 
             <Field>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "Creating..." : "Create Organization & Admin Account"}
+                {isSubmitting ? "Creating..." : "Create School & Admin Account"}
               </Button>
             </Field>
           </FieldGroup>

@@ -1,3 +1,5 @@
+import Image from "next/image"
+import Link from "next/link"
 import { LoginForm } from "@/components/shared/login-form"
 
 export default function LoginPage() {
@@ -5,9 +7,17 @@ export default function LoginPage() {
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium pt-10">
-            <span className="font-bebas text-4xl leading-none tracking-wide">GLACQ</span>
-          </a>
+          <Link href="/" className="flex items-center gap-2 font-medium pt-10">
+            <div className="relative w-40 h-12">
+              <Image
+                src="/logos/pc_logo.png"
+                alt="ProjectCareer Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+          </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
@@ -17,7 +27,7 @@ export default function LoginPage() {
       </div>
       <div className="bg-muted relative hidden lg:block">
         <img
-          src="/assets/glacq_image.jpeg"
+          src="/sideimage.jpeg"
           alt="Login background"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />

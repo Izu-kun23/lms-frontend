@@ -446,7 +446,7 @@ Fe
 - **Consistent Response Format**: Standardized response structures
 - **Error Handling**: Comprehensive error responses
 - **Status Codes**: Proper HTTP status code usage
-- **API Versioning**: Versioned API endpoints (`/api/v1`)
+- **API Base URL**: `https://genlmsapi-production.up.railway.app/api`
 
 ### Global Features
 
@@ -593,7 +593,7 @@ For detailed implementation guides and user journeys, see:
 
 ## 🔄 API Endpoints Overview
 
-### Authentication (`/api/v1/auth`)
+### Authentication (`https://genlmsapi-production.up.railway.app/api/auth`)
 
 - `POST /register` - User registration
 - `POST /login` - User login
@@ -609,7 +609,7 @@ For detailed implementation guides and user journeys, see:
 - `POST /sso/login` - Initiate SSO login
 - `GET /sso/callback` - SSO callback handler
 
-### Courses (`/api/v1/courses`)
+### Courses (`https://genlmsapi-production.up.railway.app/api/courses`)
 
 - `POST /` - Create course
 - `GET /` - List courses
@@ -629,7 +629,7 @@ For detailed implementation guides and user journeys, see:
 - `PUT /contents/:id` - Update content
 - `DELETE /contents/:id` - Delete content
 
-### Progress (`/api/v1/progress`)
+### Progress (`https://genlmsapi-production.up.railway.app/api/progress`)
 
 - `PUT /lectures/:lectureId` - Update progress
 - `GET /lectures/:lectureId` - Get progress
@@ -645,7 +645,7 @@ For detailed implementation guides and user journeys, see:
 - `GET /resume` - Get resume data
 - `POST /check-notifications` - Check and notify incomplete tasks
 
-### Quizzes (`/api/v1/quizzes`)
+### Quizzes (`https://genlmsapi-production.up.railway.app/api/quizzes`)
 
 - `POST /courses/:courseId` - Create quiz
 - `GET /courses/:courseId` - List quizzes
@@ -665,7 +665,7 @@ For detailed implementation guides and user journeys, see:
 - `GET /attempts/:id` - Get attempt details
 - `GET /user/statistics` - Get user quiz statistics
 
-### Assignments (`/api/v1/assignments`)
+### Assignments (`https://genlmsapi-production.up.railway.app/api/assignments`)
 
 - `POST /courses/:courseId` - Create assignment
 - `GET /courses/:courseId` - List assignments
@@ -678,7 +678,7 @@ For detailed implementation guides and user journeys, see:
 - `GET /submissions/:id` - Get submission details
 - `PUT /submissions/:id/grade` - Grade submission
 
-### File Storage (`/api/v1/storage`)
+### File Storage (`https://genlmsapi-production.up.railway.app/api/storage`)
 
 - `POST /upload` - Upload single file
 - `POST /upload-multiple` - Upload multiple files
@@ -686,7 +686,7 @@ For detailed implementation guides and user journeys, see:
 - `GET /file-info` - Get file information
 - `GET /supported-types` - Get supported file types
 
-### Messaging (`/api/v1/messaging`)
+### Messaging (`https://genlmsapi-production.up.railway.app/api/messaging`)
 
 - `POST /threads` - Create thread
 - `GET /threads` - List threads
@@ -698,7 +698,7 @@ For detailed implementation guides and user journeys, see:
 - `PUT /messages/:id` - Update message
 - `DELETE /messages/:id` - Delete message
 
-### Notifications (`/api/v1/notifications`)
+### Notifications (`https://genlmsapi-production.up.railway.app/api/notifications`)
 
 - `GET /` - Get all notifications
 - `GET /unread` - Get unread notifications
@@ -708,7 +708,7 @@ For detailed implementation guides and user journeys, see:
 - `DELETE /:id` - Delete notification
 - `DELETE /` - Delete all notifications
 
-### Organizations (`/api/v1/organizations`)
+### Organizations (`https://genlmsapi-production.up.railway.app/api/organizations`)
 
 - `POST /` - Create organization
 - `GET /` - List organizations
@@ -720,7 +720,7 @@ For detailed implementation guides and user journeys, see:
 - `POST /accept-invitation` - Accept invitation
 - `GET /:id/stats` - Get organization statistics
 
-### Admin (`/api/v1/admin`)
+### Admin (`https://genlmsapi-production.up.railway.app/api/admin`)
 
 - `GET /stats` - Get system statistics
 - `GET /stats/courses` - Get course statistics
@@ -730,14 +730,14 @@ For detailed implementation guides and user journeys, see:
 - `DELETE /users/:id` - Delete user
 - `GET /health` - Get system health
 
-### Health (`/api/v1/health`)
+### Health (`https://genlmsapi-production.up.railway.app/api/health`)
 
 - `GET /` - System health check
 
 ---
 
 **Last Updated**: Generated from codebase analysis  
-**API Version**: v1  
+**API Base URL**: https://genlmsapi-production.up.railway.app/api
 **Total Endpoints**: 100+
 
 ---

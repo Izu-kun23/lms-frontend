@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/hooks/useAuth"
+import { getSchools } from "@/lib/school-service"
 
 export function SignupForm({
   className,
@@ -18,16 +19,52 @@ export function SignupForm({
 }: React.ComponentProps<"form">) {
   const [error, setError] = React.useState<string>("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [organizations, setOrganizations] = React.useState<Array<{ id: string; name: string; slug: string }>>([])
-  const [isLoadingOrgs, setIsLoadingOrgs] = React.useState(true)
+  const [schools, setSchools] = React.useState<Array<{ id: string; name: string; slug: string }>>([])
+  const [isLoadingSchools, setIsLoadingSchools] = React.useState(true)
+  const [schoolsError, setSchoolsError] = React.useState<string>("")
   const { register } = useAuth()
 
-  // Load organizations from localStorage (API requires auth)
+  // Load schools via shared school store
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedOrgs = JSON.parse(localStorage.getItem("organizations") || "[]")
-      setOrganizations(storedOrgs)
-      setIsLoadingOrgs(false)
+    let isMounted = true
+
+    const loadSchools = async () => {
+      setIsLoadingSchools(true)
+      setSchoolsError("")
+
+      try {
+        const { schools: fetchedSchools, fromCache, stale } = await getSchools()
+        if (!isMounted) return
+
+        if (fetchedSchools.length > 0) {
+          setSchools(fetchedSchools.map((school) => ({ id: school.id, name: school.name, slug: school.slug })))
+        } else {
+          setSchools([])
+          setSchoolsError("No schools found. Please create a school first.")
+        }
+
+        if (stale && fromCache) {
+          setSchoolsError(
+            "School list may be outdated. Sign in as an administrator to refresh the list if changes were made recently."
+          )
+        }
+      } catch (error) {
+        console.error("Error loading schools:", error)
+        if (isMounted) {
+          setSchools([])
+          setSchoolsError("Unable to load schools. Please contact support.")
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSchools(false)
+        }
+      }
+    }
+
+    loadSchools()
+
+    return () => {
+      isMounted = false
     }
   }, [])
 
@@ -38,10 +75,10 @@ export function SignupForm({
     const formData = new FormData(event.currentTarget)
     const password = String(formData.get("password") || "")
     const confirmPassword = String(formData.get("confirm-password") || "")
-    const organizationId = formData.get("organizationId") as string
+    const schoolId = formData.get("schoolId") as string
 
-    if (!organizationId) {
-      setError("Please select an organization")
+    if (!schoolId) {
+      setError("Please select a school")
       setIsSubmitting(false)
       return
     }
@@ -62,10 +99,18 @@ export function SignupForm({
       const email = formData.get("email") as string
       const firstName = formData.get("firstName") as string
       const lastName = formData.get("lastName") as string
-      const matricNumber = formData.get("matricNumber") as string
+      const studentIdValue = formData.get("studentId") as string
 
       if (!firstName || !lastName) {
         setError("Please enter both first and last name")
+        setIsSubmitting(false)
+        return
+      }
+
+      // Convert studentId to number if provided
+      const studentId = studentIdValue ? Number.parseInt(studentIdValue, 10) : undefined
+      if (studentIdValue && isNaN(studentId!)) {
+        setError("Student ID must be a valid number")
         setIsSubmitting(false)
         return
       }
@@ -75,8 +120,9 @@ export function SignupForm({
         password,
         firstName,
         lastName,
-        organizationId,
-        matricNumber: matricNumber || undefined,
+        role: "STUDENT", // Automatically set to STUDENT for registration
+        schoolId,
+        studentId,
       })
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.")
@@ -100,11 +146,9 @@ export function SignupForm({
             name="firstName" 
             type="text" 
             placeholder="John" 
-            required 
+            required
+            className="focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
-          <FieldDescription>
-            Enter your first name as it appears on official records.
-          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
@@ -113,11 +157,9 @@ export function SignupForm({
             name="lastName" 
             type="text" 
             placeholder="Doe" 
-            required 
+            required
+            className="focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
-          <FieldDescription>
-            Enter your last name as it appears on official records.
-          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="email">Email Address</FieldLabel>
@@ -126,11 +168,9 @@ export function SignupForm({
             name="email" 
             type="email" 
             placeholder="student@university.edu" 
-            required 
+            required
+            className="focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
-          <FieldDescription>
-            Your email must be unique within your organization. We&apos;ll use this for account verification and notifications.
-          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -139,11 +179,9 @@ export function SignupForm({
             name="password" 
             type="password" 
             placeholder="Enter a secure password"
-            required 
+            required
+            className="focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
-          <FieldDescription>
-            Password must meet minimum security requirements. We recommend using a strong, unique password.
-          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
@@ -152,53 +190,56 @@ export function SignupForm({
             name="confirm-password" 
             type="password" 
             placeholder="Confirm your password"
-            required 
+            required
+            className="focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
-          <FieldDescription>
-            Please re-enter your password to confirm.
-          </FieldDescription>
         </Field>
         <Field>
-          <FieldLabel htmlFor="organizationId">Organization</FieldLabel>
+          <FieldLabel htmlFor="schoolId">School</FieldLabel>
           <select
-            id="organizationId"
-            name="organizationId"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            id="schoolId"
+            name="schoolId"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             required
-            disabled={isLoadingOrgs}
+            disabled={isLoadingSchools}
           >
             <option value="">
-              {isLoadingOrgs ? "Loading organizations..." : "Select your organization"}
+              {isLoadingSchools ? "Loading schools..." : "Select your school"}
             </option>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
+            {schools.map((school) => (
+              <option key={school.id} value={school.id}>
+                {school.name}
               </option>
             ))}
           </select>
-          {!isLoadingOrgs && organizations.length === 0 && (
+          {schoolsError && (
+            <FieldDescription className="text-red-600">
+              {schoolsError}
+              {" "}
+              <a href="/onboarding" className="underline underline-offset-4 font-medium">
+                Create a school here
+              </a>
+            </FieldDescription>
+          )}
+          {!isLoadingSchools && !schoolsError && schools.length === 0 && (
             <FieldDescription className="text-amber-600">
-              No organizations found.{" "}
+              No schools found.{" "}
               <a href="/onboarding" className="underline underline-offset-4 font-medium">
                 Create one here
               </a>
             </FieldDescription>
           )}
-          <FieldDescription>
-            Select the organization you belong to. Your email must be unique within this organization.
-          </FieldDescription>
         </Field>
         <Field>
-          <FieldLabel htmlFor="matricNumber">Matriculation Number (Optional)</FieldLabel>
+          <FieldLabel htmlFor="studentId">Student ID (Optional)</FieldLabel>
           <Input 
-            id="matricNumber" 
-            name="matricNumber" 
-            type="text" 
-            placeholder="STU001" 
+            id="studentId" 
+            name="studentId" 
+            type="number" 
+            placeholder="2023001" 
+            min="1"
+            className="focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
-          <FieldDescription>
-            If applicable, enter your student identification or matriculation number.
-          </FieldDescription>
         </Field>
         {error ? (
           <FieldDescription className="text-center text-red-600">
@@ -208,7 +249,7 @@ export function SignupForm({
         <Field>
           <Button
             type="submit"
-            className="bg-black text-white hover:bg-black/90 w-full"
+            className="bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 w-full"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Creating account..." : "Create Student Account"}

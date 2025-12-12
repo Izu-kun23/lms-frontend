@@ -8,14 +8,16 @@ export interface User {
   firstName: string
   lastName: string
   role: UserRole
+  studentId?: number
   matricNumber?: string
-  organizationId: string
-  organization?: Organization
+  schoolId: string
+  school?: School
+  emailVerified?: boolean
   createdAt: string
   updatedAt?: string
 }
 
-export interface Organization {
+export interface School {
   id: string
   name: string
   slug: string
@@ -39,7 +41,7 @@ export interface Course {
     firstName: string
     lastName: string
   }
-  organizationId: string
+  schoolId: string
   createdAt: string
   updatedAt: string
 }
@@ -78,13 +80,16 @@ export interface ResumeData {
 export interface LoginRequest {
   email: string
   password: string
-  organizationId?: string // Optional: only needed for users with multiple orgs or admin login
+  schoolId?: string // Optional: only needed for users with multiple schools or admin login
 }
 
 export interface LoginResponse {
   accessToken: string
   refreshToken: string
   user: User
+  schools?: School[]
+  mfaRequired?: boolean
+  mfaToken?: string
 }
 
 export interface RegisterRequest {
@@ -92,14 +97,36 @@ export interface RegisterRequest {
   password: string
   firstName: string
   lastName: string
-  organizationId: string
-  matricNumber?: string
+  role: "STUDENT" | "INSTRUCTOR" | "ADMIN" | "SUPER_ADMIN"
+  schoolId: string
+  studentId?: number
 }
 
 export interface RegisterResponse extends LoginResponse {}
 
-// Organization types
-export interface CreateOrganizationRequest {
+export interface UpdateProfileRequest {
+  firstName?: string
+  lastName?: string
+  studentId?: number
+  profilePicture?: string
+  notificationPreferences?: {
+    email?: boolean
+    push?: boolean
+    inApp?: boolean
+  }
+  learningPreferences?: {
+    theme?: "light" | "dark" | "auto"
+    language?: string
+    accessibility?: {
+      fontSize?: "small" | "medium" | "large"
+      highContrast?: boolean
+      screenReader?: boolean
+    }
+  }
+}
+
+// School types
+export interface CreateSchoolRequest {
   name: string
   slug: string
   domain?: string
@@ -112,7 +139,7 @@ export interface CreateOrganizationRequest {
   adminStudentId?: number
 }
 
-export interface UpdateOrganizationRequest {
+export interface UpdateSchoolRequest {
   name?: string
   slug?: string
   domain?: string
@@ -143,10 +170,10 @@ export interface GlobalStats {
     newUsersThisMonth: number
     userGrowthRate: number
   }
-  organizations: {
-    totalOrganizations: number
-    activeOrganizations: number
-    averageUsersPerOrg: number
+  schools: {
+    totalSchools: number
+    activeSchools: number
+    averageUsersPerSchool: number
   }
   courses: {
     totalCourses: number
@@ -182,5 +209,59 @@ export interface SystemHealth {
     storage: string
     network: string
   }
+}
+
+export interface Assignment {
+  id: string
+  courseId: string
+  course?: Course
+  title: string
+  description: string
+  dueDate?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AssignmentSubmission {
+  id: string
+  assignmentId: string
+  assignment?: Assignment
+  userId: string
+  fileUrl?: string
+  text?: string
+  grade?: number
+  feedback?: string
+  submittedAt?: string
+  gradedAt?: string
+  status: "PENDING" | "SUBMITTED" | "GRADED"
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MessageThread {
+  id: string
+  courseId: string
+  course?: Course
+  title: string
+  createdAt: string
+  updatedAt: string
+  lastMessageAt?: string
+  messageCount?: number
+}
+
+export interface Message {
+  id: string
+  threadId: string
+  thread?: MessageThread
+  userId: string
+  user?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+  body: string
+  createdAt: string
+  updatedAt: string
 }
 

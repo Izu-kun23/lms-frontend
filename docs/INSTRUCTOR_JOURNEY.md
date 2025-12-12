@@ -45,7 +45,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Organization context set
    - Course ID generated
 
-**API Endpoint**: `POST /api/v1/courses`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/courses`
 
 **Request Body**:
 
@@ -98,7 +98,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
      - **FILE**: Documents, PDFs, and resources
      - **LIVE**: Live streaming sessions
 
-**API Endpoint**: `POST /api/v1/courses/:id/modules`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/courses/:id/modules`
 
 **Request Body**:
 
@@ -109,7 +109,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
 }
 ```
 
-**API Endpoint**: `POST /api/v1/modules/:id/lectures`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/modules/:id/lectures`
 
 **Request Body**:
 
@@ -142,7 +142,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Test content accessibility
    - Verify content quality
 
-**API Endpoint**: `POST /api/v1/lectures/:id/contents`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/lectures/:id/contents`
 
 **Request Body**:
 
@@ -184,7 +184,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Check student progress
    - Monitor engagement levels
 
-**API Endpoint**: `GET /api/v1/courses/:id/enrollments`
+**API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/courses/:id/enrollments`
 
 **Response**:
 
@@ -226,7 +226,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Identify at-risk students
    - Plan intervention strategies
 
-**API Endpoint**: `GET /api/v1/progress/users/:userId`
+**API Endpoint**: `GET https://genlmsapi-production.up.railway.app/api/progress/users/:userId`
 
 **Response**:
 
@@ -290,7 +290,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Set passing scores
    - Enable/disable features
 
-**API Endpoint**: `POST /api/v1/quizzes`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/quizzes`
 
 **Request Body**:
 
@@ -343,7 +343,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Send notifications
    - Monitor submission rates
 
-**API Endpoint**: `POST /api/v1/assignments`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/assignments`
 
 **Request Body**:
 
@@ -377,7 +377,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Send feedback notifications
    - Track grading completion
 
-**API Endpoint**: `PUT /api/v1/assignments/:id/submissions/:submissionId`
+**API Endpoint**: `PUT https://genlmsapi-production.up.railway.app/api/assignments/:id/submissions/:submissionId`
 
 **Request Body**:
 
@@ -445,7 +445,7 @@ Instructors are the content creators and course facilitators in the LMS system. 
    - Provide additional information
    - Monitor student responses
 
-**API Endpoint**: `POST /api/v1/notifications`
+**API Endpoint**: `POST https://genlmsapi-production.up.railway.app/api/notifications`
 
 **Request Body**:
 
