@@ -40,8 +40,12 @@ export async function getSchools(options: {
   try {
     const schools = await fetchSchoolsFromServer()
     return { schools, fromCache: false, stale: false }
-  } catch (error) {
-    console.warn("[SchoolService] Failed to refresh schools from server", error)
+  } catch (error: any) {
+    // Don't log refresh token expiration errors - they're expected
+    const isRefreshTokenExpired = (error as any)?.isRefreshTokenExpired
+    if (!isRefreshTokenExpired) {
+      console.warn("[SchoolService] Failed to refresh schools from server", error)
+    }
     return {
       schools: cache.schools,
       fromCache: true,

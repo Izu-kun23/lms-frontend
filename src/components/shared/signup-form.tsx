@@ -48,11 +48,18 @@ export function SignupForm({
             "School list may be outdated. Sign in as an administrator to refresh the list if changes were made recently."
           )
         }
-      } catch (error) {
-        console.error("Error loading schools:", error)
+      } catch (error: any) {
+        // Don't log refresh token expiration errors - they're expected when not logged in
+        const isRefreshTokenExpired = (error as any)?.isRefreshTokenExpired
+        if (!isRefreshTokenExpired) {
+          console.error("Error loading schools:", error)
+        }
         if (isMounted) {
           setSchools([])
-          setSchoolsError("Unable to load schools. Please contact support.")
+          // Only show error if it's not a refresh token expiration (which is expected)
+          if (!isRefreshTokenExpired) {
+            setSchoolsError("Unable to load schools. Please contact support.")
+          }
         }
       } finally {
         if (isMounted) {

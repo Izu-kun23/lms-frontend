@@ -38,8 +38,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(currentUser)
           } catch (error: any) {
             // Token might be invalid or expired, clear it silently
-            // Don't log errors for 401s as they're expected when tokens expire
-            if (error.response?.status !== 401) {
+            // Don't log errors for 401s or refresh token expiration as they're expected when tokens expire
+            const isRefreshTokenExpired = (error as any)?.isRefreshTokenExpired
+            if (error.response?.status !== 401 && !isRefreshTokenExpired) {
               console.error("Auth check failed:", error)
             }
             apiClient.clearTokens()
@@ -207,8 +208,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = await apiClient.getCurrentUser()
       setUser(currentUser)
       return currentUser
-    } catch (error) {
-      console.error("Failed to refresh user:", error)
+    } catch (error: any) {
+      // Don't log refresh token expiration errors - they're expected when tokens expire
+      const isRefreshTokenExpired = (error as any)?.isRefreshTokenExpired
+      if (!isRefreshTokenExpired) {
+        console.error("Failed to refresh user:", error)
+      }
       // If refresh fails, user might be logged out
       apiClient.clearTokens()
       setUser(null)

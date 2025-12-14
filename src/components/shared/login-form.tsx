@@ -49,8 +49,12 @@ export function LoginForm({
           // Don't show error, just log it
           console.warn("School list may be outdated")
         }
-      } catch (error) {
-        console.error("Error loading schools:", error)
+      } catch (error: any) {
+        // Don't log refresh token expiration errors - they're expected when not logged in
+        const isRefreshTokenExpired = (error as any)?.isRefreshTokenExpired
+        if (!isRefreshTokenExpired) {
+          console.error("Error loading schools:", error)
+        }
         if (isMounted) {
           setSchools([])
           // Don't show error - school selection is optional for login

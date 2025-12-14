@@ -114,6 +114,11 @@ class ApiClient {
             // Refresh failed - clear tokens and handle gracefully
             this.clearTokens()
             
+            // Mark the error so callers can identify it as a refresh token expiration
+            if (refreshError.isRefreshTokenExpired) {
+              ;(refreshError as any).isRefreshTokenExpired = true
+            }
+            
             // If refresh token is invalid/expired, don't try to redirect on auth pages
             if (typeof window !== "undefined") {
               const currentPath = window.location.pathname
@@ -207,7 +212,10 @@ class ApiClient {
         // If refresh token is invalid/expired (401), clear tokens
         if (error.response?.status === 401) {
           this.clearTokens()
-          throw new Error("Refresh token expired. Please login again.")
+          const refreshError = new Error("Refresh token expired. Please login again.")
+          // Add a flag to identify this as a refresh token expiration error
+          ;(refreshError as any).isRefreshTokenExpired = true
+          throw refreshError
         }
         
         // Handle other errors
