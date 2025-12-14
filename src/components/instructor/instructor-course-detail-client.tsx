@@ -14,6 +14,8 @@ import {
 import type { CourseWithModules } from "@/types/course"
 import type { Module, Lecture } from "@/types/course"
 import { apiClient } from "@/lib/api"
+import { CreateModuleModal } from "./create-module-modal"
+import { CreateLectureModal } from "./create-lecture-modal"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -24,11 +26,15 @@ interface InstructorCourseDetailClientProps {
 
 export function InstructorCourseDetailClient({
   course,
-  modules,
+  modules: initialModules,
 }: InstructorCourseDetailClientProps) {
+  const [modules, setModules] = useState<Module[]>(initialModules)
   const [moduleLectures, setModuleLectures] = useState<Record<string, Lecture[]>>({})
   const [loadingLectures, setLoadingLectures] = useState<Set<string>>(new Set())
   const [openModalModuleId, setOpenModalModuleId] = useState<string | null>(null)
+  const [isCreateModuleModalOpen, setIsCreateModuleModalOpen] = useState(false)
+  const [isCreateLectureModalOpen, setIsCreateLectureModalOpen] = useState(false)
+  const [selectedModuleForLecture, setSelectedModuleForLecture] = useState<{ id: string; title: string } | null>(null)
 
   // Automatically fetch lectures for all modules on mount
   useEffect(() => {
@@ -121,11 +127,12 @@ export function InstructorCourseDetailClient({
               {modules.length} {modules.length === 1 ? "module" : "modules"}
             </p>
           </div>
-          <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-full">
-            <Link href={`/instructor/courses/${course.id}/modules/new`}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Module
-            </Link>
+          <Button 
+            onClick={() => setIsCreateModuleModalOpen(true)}
+            className="bg-orange-500 hover:bg-orange-600 rounded-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Module
           </Button>
         </div>
 
@@ -133,11 +140,12 @@ export function InstructorCourseDetailClient({
           <Card className="p-12 text-center">
             <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
             <p className="text-muted-foreground text-lg mb-4">No modules yet</p>
-            <Button asChild className="bg-orange-500 hover:bg-orange-600 rounded-full">
-              <Link href={`/instructor/courses/${course.id}/modules/new`}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Module
-              </Link>
+            <Button 
+              onClick={() => setIsCreateModuleModalOpen(true)}
+              className="bg-orange-500 hover:bg-orange-600 rounded-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create First Module
             </Button>
           </Card>
         ) : (
@@ -174,40 +182,49 @@ export function InstructorCourseDetailClient({
                       <div className="space-y-2 mb-3">
                         {moduleLectures[module.id]?.length > 0 ? (
                           <>
-                            {moduleLectures[module.id].slice(0, 4).map((lecture) => (
-                              <Link
-                                key={lecture.id}
-                                href={`/instructor/courses/${course.id}/modules/${module.id}/lectures/${lecture.id}`}
-                                className="inline-flex font-medium items-center text-orange-600 hover:underline text-sm"
-                              >
-                                {lecture.title}
-                                <svg
-                                  className="w-4 h-4 ms-2 rtl:rotate-[270deg]"
-                                  aria-hidden="true"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="24"
-                                  height="24"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
+                            <div className="flex flex-col gap-2">
+                              {moduleLectures[module.id].slice(0, 4).map((lecture, index) => (
+                                <Link
+                                  key={lecture.id}
+                                  href={`/instructor/courses/${course.id}/modules/${module.id}/lectures/${lecture.id}`}
+                                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-950/20 transition-colors group"
                                 >
-                                  <path
-                                    stroke="currentColor"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M18 14v4.833A1.166 1.166 0 0 1 16.833 20H5.167A1.167 1.167 0 0 1 4 18.833V7.167A1.166 1.166 0 0 1 5.167 6h4.618m4.447-2H20v5.768m-7.889 2.121 7.778-7.778"
-                                  />
-                                </svg>
-                              </Link>
-                            ))}
+                                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center text-xs font-semibold">
+                                    {index + 1}
+                                  </span>
+                                  <span className="flex-1 font-medium text-orange-600 dark:text-orange-400 group-hover:underline text-sm truncate">
+                                    {lecture.title}
+                                  </span>
+                                  <svg
+                                    className="w-4 h-4 text-orange-600 dark:text-orange-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      stroke="currentColor"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M18 14v4.833A1.166 1.166 0 0 1 16.833 20H5.167A1.167 1.167 0 0 1 4 18.833V7.167A1.166 1.166 0 0 1 5.167 6h4.618m4.447-2H20v5.768m-7.889 2.121 7.778-7.778"
+                                    />
+                                  </svg>
+                                </Link>
+                              ))}
+                            </div>
                             {moduleLectures[module.id].length > 4 && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setOpenModalModuleId(module.id)}
-                                className="mt-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 text-sm"
+                                asChild
+                                className="mt-2 w-full text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 text-sm"
                               >
-                                View more ({moduleLectures[module.id].length - 4} more)
+                                <Link href={`/instructor/courses/${course.id}/modules/${module.id}/lectures`}>
+                                  View more ({moduleLectures[module.id].length - 4} more)
+                                </Link>
                               </Button>
                             )}
                           </>
@@ -217,8 +234,11 @@ export function InstructorCourseDetailClient({
                           </p>
                         )}
                       </div>
-                      <Link
-                        href={`/instructor/courses/${course.id}/modules/${module.id}/lectures/new`}
+                      <button
+                        onClick={() => {
+                          setSelectedModuleForLecture({ id: module.id, title: module.title })
+                          setIsCreateLectureModalOpen(true)
+                        }}
                         className="inline-flex font-medium items-center text-orange-600 hover:underline text-sm"
                       >
                         <Plus className="h-4 w-4 mr-2" />
@@ -240,7 +260,7 @@ export function InstructorCourseDetailClient({
                             d="M18 14v4.833A1.166 1.166 0 0 1 16.833 20H5.167A1.167 1.167 0 0 1 4 18.833V7.167A1.166 1.166 0 0 1 5.167 6h4.618m4.447-2H20v5.768m-7.889 2.121 7.778-7.778"
                           />
                         </svg>
-                      </Link>
+                      </button>
                     </>
                   )}
                 </div>
@@ -313,6 +333,59 @@ export function InstructorCourseDetailClient({
             </div>
           </SheetContent>
         </Sheet>
+      )}
+
+      {/* Create Module Modal */}
+      <CreateModuleModal
+        courseId={course.id}
+        open={isCreateModuleModalOpen}
+        onOpenChange={setIsCreateModuleModalOpen}
+        onModuleCreated={(newModule) => {
+          setModules((prev) => [...prev, newModule])
+          // Fetch lectures for the new module
+          setLoadingLectures((prev) => new Set(prev).add(newModule.id))
+          apiClient.getModuleLectures(newModule.id)
+            .then((lectures) => {
+              setModuleLectures((prev) => ({ ...prev, [newModule.id]: lectures }))
+            })
+            .catch((error) => {
+              console.error(`Error fetching lectures for module ${newModule.id}:`, error)
+            })
+            .finally(() => {
+              setLoadingLectures((prev) => {
+                const next = new Set(prev)
+                next.delete(newModule.id)
+                return next
+              })
+            })
+        }}
+        existingModulesCount={modules.length}
+      />
+
+      {/* Create Lecture Modal */}
+      {selectedModuleForLecture && (
+        <CreateLectureModal
+          moduleId={selectedModuleForLecture.id}
+          moduleTitle={selectedModuleForLecture.title}
+          open={isCreateLectureModalOpen}
+          onOpenChange={(open) => {
+            setIsCreateLectureModalOpen(open)
+            if (!open) {
+              setSelectedModuleForLecture(null)
+            }
+          }}
+          onLectureCreated={(newLecture) => {
+            // Update the lectures for the module
+            setModuleLectures((prev) => ({
+              ...prev,
+              [selectedModuleForLecture.id]: [
+                ...(prev[selectedModuleForLecture.id] || []),
+                newLecture,
+              ],
+            }))
+          }}
+          existingLecturesCount={moduleLectures[selectedModuleForLecture.id]?.length || 0}
+        />
       )}
     </div>
   )

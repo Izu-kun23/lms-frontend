@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,26 +10,62 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { apiClient } from "@/lib/api"
+import type { User } from "@/lib/types"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
 interface CreateCourseClientProps {
   schoolId: string
+  userRole?: string
+  userId?: string
 }
 
-export function CreateCourseClient({ schoolId }: CreateCourseClientProps) {
+export function CreateCourseClient({ schoolId, userRole, userId }: CreateCourseClientProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string>("")
+  const [instructors, setInstructors] = useState<User[]>([])
+  const [isLoadingInstructors, setIsLoadingInstructors] = useState(false)
+  const isAdmin = userRole?.toUpperCase() === "ADMIN" || userRole?.toUpperCase() === "SUPER_ADMIN"
   
   const [formData, setFormData] = useState({
     title: "",
     code: "",
     summary: "",
     coverUrl: "",
+    instructorId: "",
   })
+
+  // Fetch instructors if user is an admin
+  useEffect(() => {
+    if (isAdmin && schoolId) {
+      setIsLoadingInstructors(true)
+      apiClient.getAllUsers(schoolId)
+        .then((users) => {
+          // Filter to only instructors
+          const instructorUsers = users.filter((user) => 
+            user.role.toUpperCase() === "INSTRUCTOR"
+          )
+          setInstructors(instructorUsers)
+        })
+        .catch((err) => {
+          console.error("Failed to fetch instructors:", err)
+          toast.error("Failed to load instructors")
+        })
+        .finally(() => {
+          setIsLoadingInstructors(false)
+        })
+    }
+  }, [isAdmin, schoolId])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -37,11 +73,26 @@ export function CreateCourseClient({ schoolId }: CreateCourseClientProps) {
     setIsSubmitting(true)
 
     try {
-      const course = await apiClient.post("/courses", {
-        ...formData,
+      const courseData: any = {
+        title: formData.title,
+        code: formData.code,
+        summary: formData.summary,
         schoolId,
         coverUrl: formData.coverUrl || undefined,
-      })
+      }
+
+      // Only include instructorId if:
+      // 1. User is admin and explicitly selected an instructor, OR
+      // 2. User is instructor (backend will auto-assign them, but we can be explicit)
+      // For admins: if no instructor selected, don't send instructorId (let backend handle it or leave empty)
+      if (isAdmin && formData.instructorId) {
+        courseData.instructorId = formData.instructorId
+      } else if (!isAdmin && userId) {
+        // For instructors, backend will auto-assign, but we can be explicit
+        // Actually, let's not send it - let backend handle auto-assignment for instructors
+      }
+
+      const course = await apiClient.createCourse(courseData)
 
       toast.success("Course created successfully!")
       router.push(`/instructor/courses/${course.id}`)
@@ -144,6 +195,46 @@ export function CreateCourseClient({ schoolId }: CreateCourseClientProps) {
                   className="rounded-full"
                 />
               </Field>
+
+              {isAdmin && (
+                <Field>
+                  <FieldLabel htmlFor="instructorId">
+                    Instructor {!isLoadingInstructors && instructors.length === 0 && "(No instructors available)"}
+                  </FieldLabel>
+                  {isLoadingInstructors ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading instructors...
+                    </div>
+                  ) : instructors.length > 0 ? (
+                    <Select
+                      value={formData.instructorId}
+                      onValueChange={(value) => handleInputChange("instructorId", value)}
+                    >
+                      <SelectTrigger className="w-full rounded-full">
+                        <SelectValue placeholder="Select an instructor (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Leave empty to assign later</SelectItem>
+                        {instructors.map((instructor) => (
+                          <SelectItem key={instructor.id} value={instructor.id}>
+                            {instructor.firstName} {instructor.lastName} ({instructor.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      No instructors available. Leave empty to assign later.
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isAdmin 
+                      ? "Select an instructor for this course. Leave empty if you want to assign one later."
+                      : "Instructors are automatically assigned when they create courses."}
+                  </p>
+                </Field>
+              )}
             </FieldGroup>
 
             {error && (

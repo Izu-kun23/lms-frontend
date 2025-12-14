@@ -21,12 +21,23 @@ function CoursesSkeleton() {
 
 export default async function InstructorCoursesPage() {
   // Get current user to filter courses by instructor ID
+  // This ensures instructors only see courses they are assigned to
+  // Admins will see all courses (no filtering by instructorId)
   const currentUser = await apiGet<User>("/users/me", {
     requireAuth: true,
   }).catch(() => null)
 
-  // Fetch courses filtered by instructor ID
-  const courses = await getInstructorCourses(currentUser?.id)
+  if (!currentUser?.id) {
+    throw new Error("User not found or not authenticated")
+  }
+
+  // For admins, don't pass instructorId at all to prevent backend from filtering
+  // For instructors, pass their ID so they only see their assigned courses
+  const isAdmin = currentUser.role.toUpperCase() === "ADMIN" || currentUser.role.toUpperCase() === "SUPER_ADMIN"
+  const courses = await getInstructorCourses(
+    isAdmin ? undefined : currentUser.id, 
+    currentUser.role
+  )
 
   const coursesWithInstructor = await Promise.all(
     courses.map(async (course: Course) => {

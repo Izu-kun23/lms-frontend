@@ -21,10 +21,19 @@ function InstructorDashboardSkeleton() {
 export default async function InstructorDashboardPage() {
   try {
     // Get current user first to filter courses by instructor ID
+    // This ensures instructors only see courses they are assigned to
+    // Admins will see all courses (no filtering by instructorId)
     const user = await apiGet<User>("/users/me", { requireAuth: true }).catch(() => null)
     
+    if (!user?.id) {
+      throw new Error("User not found or not authenticated")
+    }
+    
+    // For admins, don't pass instructorId at all to prevent backend from filtering
+    // For instructors, pass their ID so they only see their assigned courses
+    const isAdmin = user.role.toUpperCase() === "ADMIN" || user.role.toUpperCase() === "SUPER_ADMIN"
     const [data, enrollments] = await Promise.all([
-      fetchInstructorDashboard(user?.id),
+      fetchInstructorDashboard(isAdmin ? undefined : user.id, user.role),
       getRecentEnrollments().catch(() => []),
     ])
 

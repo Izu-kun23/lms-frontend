@@ -21,7 +21,7 @@ import type {
   MessageThread,
   Message,
 } from "./types"
-import type { Lecture } from "@/types/course"
+import type { Lecture, Module, Content } from "@/types/course"
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://lmsbackend-dev.up.railway.app/api"
@@ -451,6 +451,61 @@ class ApiClient {
     return response.data
   }
 
+  async createCourse(data: {
+    title: string
+    code: string
+    summary: string
+    coverUrl?: string
+    schoolId: string
+    instructorId?: string
+  }): Promise<Course> {
+    const response = await this.client.post<Course>("/courses", data)
+    return response.data
+  }
+
+  async getCourseModules(courseId: string): Promise<Module[]> {
+    const response = await this.client.get<Array<{
+      id: string
+      title: string
+      index: number
+      courseId: string
+      description?: string
+      createdAt?: string
+      updatedAt?: string
+    }>>(`/courses/${courseId}/modules`)
+    // Map API response (with 'index') to Module type (with 'order')
+    return response.data.map((module) => ({
+      id: module.id,
+      title: module.title,
+      courseId: module.courseId,
+      order: module.index,
+      description: module.description,
+      createdAt: module.createdAt || new Date().toISOString(),
+      updatedAt: module.updatedAt || new Date().toISOString(),
+    }))
+  }
+
+  async createModule(courseId: string, data: {
+    title: string
+    index: number
+  }): Promise<Module> {
+    const response = await this.client.post<{
+      id: string
+      title: string
+      index: number
+      courseId: string
+    }>(`/courses/${courseId}/modules`, data)
+    // Map API response (with 'index') to Module type (with 'order')
+    return {
+      id: response.data.id,
+      title: response.data.title,
+      courseId: response.data.courseId,
+      order: response.data.index,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+  }
+
   async getModuleLectures(moduleId: string): Promise<Lecture[]> {
     const response = await this.client.get<Array<{
       id: string
@@ -473,6 +528,202 @@ class ApiClient {
       createdAt: lecture.createdAt || new Date().toISOString(),
       updatedAt: lecture.updatedAt || new Date().toISOString(),
     }))
+  }
+
+  async createLecture(moduleId: string, data: {
+    title: string
+    index: number
+  }): Promise<Lecture> {
+    const response = await this.client.post<{
+      id: string
+      title: string
+      index: number
+      moduleId: string
+    }>(`/courses/modules/${moduleId}/lectures`, data)
+    // Map API response (with 'index') to Lecture type (with 'order')
+    return {
+      id: response.data.id,
+      title: response.data.title,
+      moduleId: response.data.moduleId,
+      order: response.data.index,
+      type: "TEXT",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+  }
+
+  async getLectureContents(lectureId: string): Promise<Content[]> {
+    const response = await this.client.get<Array<{
+      id: string
+      kind: string
+      text?: string
+      mediaUrl?: string
+      metadata?: Record<string, any>
+      index: number
+      lectureId: string
+      createdAt?: string
+      updatedAt?: string
+    }>>(`/courses/lectures/${lectureId}/contents`)
+    // Map API response (with 'kind' and 'index') to Content type (with 'type' and 'order')
+    return response.data.map((content) => ({
+      id: content.id,
+      lectureId: content.lectureId,
+      type: content.kind as Content["type"],
+      text: content.text,
+      mediaUrl: content.mediaUrl,
+      metadata: content.metadata,
+      order: content.index,
+      createdAt: content.createdAt || new Date().toISOString(),
+      updatedAt: content.updatedAt || new Date().toISOString(),
+    }))
+  }
+
+  async createLectureContent(lectureId: string, data: {
+    kind: "TEXT" | "VIDEO" | "AUDIO" | "FILE" | "LIVE"
+    text?: string
+    mediaUrl?: string
+    metadata?: Record<string, any>
+    index: number
+  }): Promise<Content> {
+    // Build clean payload - only include defined, non-empty fields
+    const payload: any = {
+      kind: data.kind,
+      index: data.index,
+    }
+    
+    // For TEXT kind, text is required - include it even if empty (backend will validate)
+    // For other kinds, only include if provided and not empty
+    if (data.text !== undefined && data.text !== null) {
+      if (data.kind === "TEXT") {
+        // For TEXT, always include the text field (backend expects it)
+        payload.text = data.text.trim()
+      } else {
+        // For other kinds, only include if not empty
+        const trimmedText = data.text.trim()
+        if (trimmedText !== "") {
+          payload.text = trimmedText
+        }
+      }
+    }
+    
+    // Only include mediaUrl if it's provided and not empty
+    if (data.mediaUrl !== undefined && data.mediaUrl !== null && data.mediaUrl.trim() !== "") {
+      payload.mediaUrl = data.mediaUrl.trim()
+    }
+    
+    // Only include metadata if it's provided and is a valid object
+    if (data.metadata !== undefined && data.metadata !== null && typeof data.metadata === "object" && Object.keys(data.metadata).length > 0) {
+      payload.metadata = data.metadata
+    }
+
+    console.log("API Request payload:", JSON.stringify(payload, null, 2))
+    console.log("Payload size:", JSON.stringify(payload).length, "bytes")
+    
+    try {
+      const response = await this.client.post<{
+        id: string
+        kind: string
+        text?: string
+        mediaUrl?: string
+        metadata?: Record<string, any>
+        index: number
+        lectureId: string
+      }>(`/courses/lectures/${lectureId}/contents`, payload)
+      // Map API response (with 'kind' and 'index') to Content type (with 'type' and 'order')
+      return {
+        id: response.data.id,
+        lectureId: response.data.lectureId,
+        type: response.data.kind as Content["type"],
+        text: response.data.text,
+        mediaUrl: response.data.mediaUrl,
+        metadata: response.data.metadata,
+        order: response.data.index,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    } catch (error: any) {
+      console.error("Failed to create lecture content:", error)
+      console.error("Request payload was:", JSON.stringify(payload, null, 2))
+      console.error("Error response status:", error?.response?.status)
+      console.error("Error response data:", error?.response?.data)
+      console.error("Error response headers:", error?.response?.headers)
+      
+      // Log the full error for debugging
+      if (error?.response?.data) {
+        console.error("Full error response:", JSON.stringify(error.response.data, null, 2))
+      }
+      
+      throw error
+    }
+  }
+
+  async updateLectureContent(contentId: string, data: {
+    kind?: "TEXT" | "VIDEO" | "AUDIO" | "FILE" | "LIVE"
+    text?: string
+    mediaUrl?: string
+    metadata?: Record<string, any>
+    index?: number
+  }): Promise<Content> {
+    // Build clean payload - only include defined, non-empty fields
+    const payload: any = {}
+    
+    if (data.kind !== undefined) {
+      payload.kind = data.kind
+    }
+    
+    // Only include text if it's provided and not empty
+    if (data.text !== undefined && data.text !== null && data.text.trim() !== "") {
+      payload.text = data.text.trim()
+    }
+    
+    // Only include mediaUrl if it's provided and not empty
+    if (data.mediaUrl !== undefined && data.mediaUrl !== null && data.mediaUrl.trim() !== "") {
+      payload.mediaUrl = data.mediaUrl.trim()
+    }
+    
+    // Only include metadata if it's provided and is a valid object
+    if (data.metadata !== undefined && data.metadata !== null && typeof data.metadata === "object" && Object.keys(data.metadata).length > 0) {
+      payload.metadata = data.metadata
+    }
+    
+    if (data.index !== undefined) {
+      payload.index = data.index
+    }
+
+    console.log("API Update payload:", JSON.stringify(payload, null, 2))
+    
+    try {
+      const response = await this.client.put<{
+        id: string
+        kind: string
+        text?: string
+        mediaUrl?: string
+        metadata?: Record<string, any>
+        index: number
+        lectureId: string
+      }>(`/courses/contents/${contentId}`, payload)
+      // Map API response (with 'kind' and 'index') to Content type (with 'type' and 'order')
+      return {
+        id: response.data.id,
+        lectureId: response.data.lectureId,
+        type: response.data.kind as Content["type"],
+        text: response.data.text,
+        mediaUrl: response.data.mediaUrl,
+        metadata: response.data.metadata,
+        order: response.data.index,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    } catch (error: any) {
+      console.error("Failed to update lecture content:", error)
+      console.error("Request payload was:", JSON.stringify(payload, null, 2))
+      console.error("Error response:", error?.response?.data)
+      throw error
+    }
+  }
+
+  async deleteLectureContent(contentId: string): Promise<void> {
+    await this.client.delete(`/courses/contents/${contentId}`)
   }
 
   // Progress

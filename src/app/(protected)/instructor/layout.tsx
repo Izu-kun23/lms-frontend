@@ -20,7 +20,10 @@ export default async function InstructorLayout({
   try {
     user = await apiGet<User>("/users/me", { requireAuth: true })
 
-    if (user.role.toUpperCase() !== "INSTRUCTOR") {
+    // Allow both instructors and admins to access instructor routes
+    // Admins need access to manage courses and assign instructors
+    const allowedRoles = ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN"]
+    if (!allowedRoles.includes(user.role.toUpperCase())) {
       redirect("/access-denied")
     }
   } catch (error) {

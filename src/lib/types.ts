@@ -40,6 +40,8 @@ export interface Course {
     id: string
     firstName: string
     lastName: string
+    email?: string
+    role?: string
   }
   schoolId: string
   createdAt: string

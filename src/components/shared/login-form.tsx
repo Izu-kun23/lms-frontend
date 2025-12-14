@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/hooks/useAuth"
 import { getSchools } from "@/lib/school-service"
+import { Eye, EyeOff } from "lucide-react"
 
 export function LoginForm({
   className,
@@ -22,6 +23,7 @@ export function LoginForm({
   const [schools, setSchools] = React.useState<Array<{ id: string; name: string; slug: string }>>([])
   const [isLoadingSchools, setIsLoadingSchools] = React.useState(true)
   const [schoolsError, setSchoolsError] = React.useState<string>("")
+  const [showPassword, setShowPassword] = React.useState(false)
   const { login } = useAuth()
 
   // Load schools from cache (optional for login)
@@ -119,14 +121,28 @@ export function LoginForm({
               Forgot your password?
             </a>
           </div>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Enter your password"
-            required
-            className="rounded-full focus-visible:ring-orange-500 focus-visible:border-orange-500"
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              required
+              className="rounded-full focus-visible:ring-orange-500 focus-visible:border-orange-500 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </Field>
         {schools.length > 0 && (
           <Field>

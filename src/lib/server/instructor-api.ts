@@ -38,10 +38,12 @@ import type {
 } from "@/types/analytics"
 
 // Dashboard
-export async function fetchInstructorDashboard(instructorId?: string) {
+export async function fetchInstructorDashboard(instructorId?: string, userRole?: string) {
   const params = new URLSearchParams()
   params.append("include", "instructor")
-  if (instructorId) {
+  // Only filter by instructorId if provided and user is not an admin
+  // Admins should see all courses, not just courses assigned to them
+  if (instructorId && userRole?.toUpperCase() !== "ADMIN" && userRole?.toUpperCase() !== "SUPER_ADMIN") {
     params.append("instructorId", instructorId)
   }
   
@@ -69,10 +71,12 @@ export async function getRecentEnrollments() {
 }
 
 // Courses
-export async function getInstructorCourses(instructorId?: string) {
+export async function getInstructorCourses(instructorId?: string, userRole?: string) {
   const params = new URLSearchParams()
   params.append("include", "instructor")
-  if (instructorId) {
+  // Only filter by instructorId if provided and user is not an admin
+  // Admins should see all courses, not just courses assigned to them
+  if (instructorId && userRole?.toUpperCase() !== "ADMIN" && userRole?.toUpperCase() !== "SUPER_ADMIN") {
     params.append("instructorId", instructorId)
   }
   return apiGet<Course[]>(`/courses?${params.toString()}`, { requireAuth: true })
@@ -118,18 +122,55 @@ export async function getCourseStats() {
 
 // Modules
 export async function getCourseModules(courseId: string) {
-  return apiGet<Module[]>(`/courses/${courseId}/modules`, {
+  const response = await apiGet<Array<{
+    id: string
+    title: string
+    index: number
+    courseId: string
+    description?: string
+    createdAt?: string
+    updatedAt?: string
+  }>>(`/courses/${courseId}/modules`, {
     requireAuth: true,
   })
+  // Map API response (with 'index') to Module type (with 'order')
+  return response.map((module) => ({
+    id: module.id,
+    title: module.title,
+    courseId: module.courseId,
+    order: module.index,
+    description: module.description,
+    createdAt: module.createdAt || new Date().toISOString(),
+    updatedAt: module.updatedAt || new Date().toISOString(),
+  })) as Module[]
 }
 
 export async function createModule(
   courseId: string,
   data: CreateModuleInput
 ) {
-  return apiPost<Module>(`/courses/${courseId}/modules`, data, {
+  // Map CreateModuleInput (with 'order') to API format (with 'index')
+  const apiData = {
+    title: data.title,
+    index: data.order ?? 0,
+  }
+  const response = await apiPost<{
+    id: string
+    title: string
+    index: number
+    courseId: string
+  }>(`/courses/${courseId}/modules`, apiData, {
     requireAuth: true,
   })
+  // Map API response (with 'index') to Module type (with 'order')
+  return {
+    id: response.id,
+    title: response.title,
+    courseId: response.courseId,
+    order: response.index,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as Module
 }
 
 export async function updateModule(
@@ -158,9 +199,29 @@ export async function createLecture(
   moduleId: string,
   data: CreateLectureInput
 ) {
-  return apiPost<Lecture>(`/courses/modules/${moduleId}/lectures`, data, {
+  // Map CreateLectureInput (with 'order') to API format (with 'index')
+  const apiData = {
+    title: data.title,
+    index: data.order ?? 0,
+  }
+  const response = await apiPost<{
+    id: string
+    title: string
+    index: number
+    moduleId: string
+  }>(`/courses/modules/${moduleId}/lectures`, apiData, {
     requireAuth: true,
   })
+  // Map API response (with 'index') to Lecture type (with 'order')
+  return {
+    id: response.id,
+    title: response.title,
+    moduleId: response.moduleId,
+    order: response.index,
+    type: data.type || "TEXT",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as Lecture
 }
 
 export async function updateLecture(
@@ -180,18 +241,68 @@ export async function deleteLecture(lectureId: string) {
 
 // Content
 export async function getLectureContents(lectureId: string) {
-  return apiGet<Content[]>(`/courses/lectures/${lectureId}/contents`, {
+  const response = await apiGet<Array<{
+    id: string
+    kind: string
+    text?: string
+    mediaUrl?: string
+    metadata?: Record<string, any>
+    index: number
+    lectureId: string
+    createdAt?: string
+    updatedAt?: string
+  }>>(`/courses/lectures/${lectureId}/contents`, {
     requireAuth: true,
   })
+  // Map API response (with 'kind' and 'index') to Content type (with 'type' and 'order')
+  return response.map((content) => ({
+    id: content.id,
+    lectureId: content.lectureId,
+    type: content.kind as Content["type"],
+    text: content.text,
+    mediaUrl: content.mediaUrl,
+    metadata: content.metadata,
+    order: content.index,
+    createdAt: content.createdAt || new Date().toISOString(),
+    updatedAt: content.updatedAt || new Date().toISOString(),
+  })) as Content[]
 }
 
 export async function createContent(
   lectureId: string,
   data: CreateContentInput
 ) {
-  return apiPost<Content>(`/courses/lectures/${lectureId}/contents`, data, {
+  // Map CreateContentInput (with 'type' and 'order') to API format (with 'kind' and 'index')
+  const apiData = {
+    kind: data.type,
+    text: data.text,
+    mediaUrl: data.mediaUrl,
+    metadata: data.metadata,
+    index: data.order ?? 0,
+  }
+  const response = await apiPost<{
+    id: string
+    kind: string
+    text?: string
+    mediaUrl?: string
+    metadata?: Record<string, any>
+    index: number
+    lectureId: string
+  }>(`/courses/lectures/${lectureId}/contents`, apiData, {
     requireAuth: true,
   })
+  // Map API response (with 'kind' and 'index') to Content type (with 'type' and 'order')
+  return {
+    id: response.id,
+    lectureId: response.lectureId,
+    type: response.kind as Content["type"],
+    text: response.text,
+    mediaUrl: response.mediaUrl,
+    metadata: response.metadata,
+    order: response.index,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as Content
 }
 
 export async function updateContent(
