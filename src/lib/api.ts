@@ -471,6 +471,36 @@ class ApiClient {
     return response.data
   }
 
+  async updateCourse(
+    courseId: string,
+    data: {
+      title?: string
+      summary?: string
+      coverUrl?: string
+      // Note: code is not supported by the API for updates (only in response)
+    }
+  ): Promise<Course> {
+    // API only accepts: title, summary, coverUrl
+    const payload: {
+      title?: string
+      summary?: string
+      coverUrl?: string
+    } = {}
+    
+    if (data.title !== undefined) {
+      payload.title = data.title
+    }
+    if (data.summary !== undefined) {
+      payload.summary = data.summary
+    }
+    if (data.coverUrl !== undefined) {
+      payload.coverUrl = data.coverUrl
+    }
+    
+    const response = await this.client.put<Course>(`/courses/${courseId}`, payload)
+    return response.data
+  }
+
   async getCourseModules(courseId: string): Promise<Module[]> {
     const response = await this.client.get<Array<{
       id: string
@@ -497,12 +527,17 @@ class ApiClient {
     title: string
     index: number
   }): Promise<Module> {
+    // Ensure index starts from 1, not 0 (0 causes null error)
+    const payload = {
+      title: data.title,
+      index: data.index && data.index > 0 ? data.index : 1,
+    }
     const response = await this.client.post<{
       id: string
       title: string
       index: number
       courseId: string
-    }>(`/courses/${courseId}/modules`, data)
+    }>(`/courses/${courseId}/modules`, payload)
     // Map API response (with 'index') to Module type (with 'order')
     return {
       id: response.data.id,
@@ -542,12 +577,17 @@ class ApiClient {
     title: string
     index: number
   }): Promise<Lecture> {
+    // Ensure index starts from 1, not 0 (0 causes null error)
+    const payload = {
+      title: data.title,
+      index: data.index && data.index > 0 ? data.index : 1,
+    }
     const response = await this.client.post<{
       id: string
       title: string
       index: number
       moduleId: string
-    }>(`/courses/modules/${moduleId}/lectures`, data)
+    }>(`/courses/modules/${moduleId}/lectures`, payload)
     // Map API response (with 'index') to Lecture type (with 'order')
     return {
       id: response.data.id,
@@ -594,9 +634,10 @@ class ApiClient {
     index: number
   }): Promise<Content> {
     // Build clean payload - only include defined, non-empty fields
+    // Ensure index starts from 1, not 0 (0 causes null error)
     const payload: any = {
       kind: data.kind,
-      index: data.index,
+      index: data.index && data.index > 0 ? data.index : 1,
     }
     
     // For TEXT kind, text is required - include it even if empty (backend will validate)
@@ -775,6 +816,49 @@ class ApiClient {
   async submitAssignment(assignmentId: string, data: { fileUrl?: string; text?: string }): Promise<AssignmentSubmission> {
     const response = await this.client.post<AssignmentSubmission>(`/assignments/${assignmentId}/submit`, data)
     return response.data
+  }
+
+  async createAssignment(
+    courseId: string,
+    data: {
+      title: string
+      description: string
+      dueAt?: string
+      // Note: maxScore and files are not supported by the API for creation
+    }
+  ): Promise<Assignment> {
+    // Only send fields supported by the API: title, description, dueAt
+    const payload: {
+      title: string
+      description: string
+      dueAt?: string
+    } = {
+      title: data.title,
+      description: data.description,
+    }
+    if (data.dueAt) {
+      payload.dueAt = data.dueAt
+    }
+    const response = await this.client.post<Assignment>(`/assignments/courses/${courseId}`, payload)
+    return response.data
+  }
+
+  async updateAssignment(
+    assignmentId: string,
+    data: {
+      title?: string
+      description?: string
+      dueAt?: string
+      maxScore?: number
+      files?: string[]
+    }
+  ): Promise<Assignment> {
+    const response = await this.client.put<Assignment>(`/assignments/${assignmentId}`, data)
+    return response.data
+  }
+
+  async deleteAssignment(assignmentId: string): Promise<void> {
+    await this.client.delete(`/assignments/${assignmentId}`)
   }
 
   // Messages

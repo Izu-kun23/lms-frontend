@@ -67,11 +67,11 @@ export function AssignmentsClient({ assignments }: AssignmentsClientProps) {
                         {assignment.description}
                       </p>
                     )}
-                    {assignment.dueDate && (
+                    {assignment.dueAt && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-4 w-4" />
                         <span>
-                          Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                          Due: {new Date(assignment.dueAt).toLocaleDateString()}
                         </span>
                       </div>
                     )}

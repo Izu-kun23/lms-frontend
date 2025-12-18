@@ -6,6 +6,7 @@ export interface AssignmentWithCourse extends Omit<Assignment, "course"> {
     title: string
     code: string
   }
+  submissions?: SubmissionWithDetails[]
 }
 
 export interface SubmissionWithDetails extends Omit<AssignmentSubmission, "assignment"> {
@@ -40,7 +41,7 @@ export interface SubmissionStats {
 export interface CreateAssignmentInput {
   title: string
   description: string
-  dueDate?: string
+  dueAt?: string
   maxScore?: number
   files?: string[] // URLs
 }
@@ -48,7 +49,7 @@ export interface CreateAssignmentInput {
 export interface UpdateAssignmentInput {
   title?: string
   description?: string
-  dueDate?: string
+  dueAt?: string
   maxScore?: number
   files?: string[]
 }

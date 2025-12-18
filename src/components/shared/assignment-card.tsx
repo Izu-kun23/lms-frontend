@@ -11,7 +11,7 @@ type AssignmentCardProps = {
   id: string
   title: string
   courseName: string
-  dueDate: string
+  dueAt: string
   status: "pending" | "submitted" | "graded" | "overdue"
   score?: number
   maxScore?: number
@@ -23,7 +23,7 @@ export function AssignmentCard({
   id,
   title,
   courseName,
-  dueDate,
+  dueAt,
   status,
   score,
   maxScore,
@@ -96,8 +96,8 @@ export function AssignmentCard({
           <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
             <Calendar className="h-4 w-4 text-orange-500" />
             <span>
-              Due: {new Date(dueDate).toLocaleDateString()}{" "}
-              {new Date(dueDate).toLocaleTimeString([], {
+              Due: {new Date(dueAt).toLocaleDateString()}{" "}
+              {new Date(dueAt).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               })}

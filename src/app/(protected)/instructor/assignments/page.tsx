@@ -17,12 +17,21 @@ function AssignmentsSkeleton() {
 }
 
 export default async function InstructorAssignmentsPage() {
-  const assignments = await getInstructorAssignments()
+  try {
+    const assignments = await getInstructorAssignments()
 
-  return (
-    <Suspense fallback={<AssignmentsSkeleton />}>
-      <AssignmentsManagementClient assignments={assignments} />
-    </Suspense>
-  )
+    return (
+      <Suspense fallback={<AssignmentsSkeleton />}>
+        <AssignmentsManagementClient assignments={assignments} />
+      </Suspense>
+    )
+  } catch (error) {
+    console.error("Failed to fetch instructor assignments:", error)
+    return (
+      <AssignmentsManagementClient
+        assignments={[]}
+      />
+    )
+  }
 }
 

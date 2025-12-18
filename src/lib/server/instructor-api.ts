@@ -1,5 +1,5 @@
-import { apiGet, apiPost, apiPut, apiDelete } from "./api-client"
-import type { Course } from "@/lib/types"
+import { apiGet, apiPost, apiPut, apiDelete, ApiError } from "./api-client"
+import type { Course, User } from "@/lib/types"
 import type {
   CourseWithModules,
   Module,
@@ -12,7 +12,6 @@ import type {
   CreateContentInput,
   UpdateContentInput,
 } from "@/types/course"
-import type { User } from "@/lib/types"
 import type {
   AssignmentWithCourse,
   SubmissionWithDetails,
@@ -37,14 +36,42 @@ import type {
   InstructorDashboardStats,
 } from "@/types/analytics"
 
+const ADMIN_ROLES = new Set(["ADMIN", "SUPER_ADMIN"])
+
+async function resolveInstructorFilter(
+  instructorId?: string,
+  userRole?: string
+) {
+  let resolvedRole = userRole?.toUpperCase()
+  let resolvedInstructorId = instructorId
+
+  if (!resolvedInstructorId || !resolvedRole) {
+    try {
+      const currentUser = await apiGet<User>("/users/me", { requireAuth: true })
+      resolvedRole = resolvedRole || currentUser.role?.toUpperCase()
+      if (!resolvedInstructorId && currentUser.role?.toUpperCase() === "INSTRUCTOR") {
+        resolvedInstructorId = currentUser.id
+      }
+    } catch (error) {
+      console.warn("[InstructorAPI] Failed to resolve instructor filter", error)
+    }
+  }
+
+  const isAdmin = resolvedRole ? ADMIN_ROLES.has(resolvedRole) : false
+
+  return {
+    instructorId: isAdmin ? undefined : resolvedInstructorId,
+    role: resolvedRole,
+  }
+}
+
 // Dashboard
 export async function fetchInstructorDashboard(instructorId?: string, userRole?: string) {
   const params = new URLSearchParams()
   params.append("include", "instructor")
-  // Only filter by instructorId if provided and user is not an admin
-  // Admins should see all courses, not just courses assigned to them
-  if (instructorId && userRole?.toUpperCase() !== "ADMIN" && userRole?.toUpperCase() !== "SUPER_ADMIN") {
-    params.append("instructorId", instructorId)
+  const { instructorId: resolvedInstructorId } = await resolveInstructorFilter(instructorId, userRole)
+  if (resolvedInstructorId) {
+    params.append("instructorId", resolvedInstructorId)
   }
   
   const [courses, stats, submissions] = await Promise.all([
@@ -74,10 +101,9 @@ export async function getRecentEnrollments() {
 export async function getInstructorCourses(instructorId?: string, userRole?: string) {
   const params = new URLSearchParams()
   params.append("include", "instructor")
-  // Only filter by instructorId if provided and user is not an admin
-  // Admins should see all courses, not just courses assigned to them
-  if (instructorId && userRole?.toUpperCase() !== "ADMIN" && userRole?.toUpperCase() !== "SUPER_ADMIN") {
-    params.append("instructorId", instructorId)
+  const { instructorId: resolvedInstructorId } = await resolveInstructorFilter(instructorId, userRole)
+  if (resolvedInstructorId) {
+    params.append("instructorId", resolvedInstructorId)
   }
   return apiGet<Course[]>(`/courses?${params.toString()}`, { requireAuth: true })
 }
@@ -102,12 +128,29 @@ export async function updateCourse(
   courseId: string,
   data: {
     title?: string
-    code?: string
     summary?: string
     coverUrl?: string
+    // Note: code is not supported by the API for updates (only in response)
   }
 ) {
-  return apiPut<Course>(`/courses/${courseId}`, data, { requireAuth: true })
+  // API only accepts: title, summary, coverUrl
+  const payload: {
+    title?: string
+    summary?: string
+    coverUrl?: string
+  } = {}
+  
+  if (data.title !== undefined) {
+    payload.title = data.title
+  }
+  if (data.summary !== undefined) {
+    payload.summary = data.summary
+  }
+  if (data.coverUrl !== undefined) {
+    payload.coverUrl = data.coverUrl
+  }
+  
+  return apiPut<Course>(`/courses/${courseId}`, payload, { requireAuth: true })
 }
 
 export async function deleteCourse(courseId: string) {
@@ -150,9 +193,10 @@ export async function createModule(
   data: CreateModuleInput
 ) {
   // Map CreateModuleInput (with 'order') to API format (with 'index')
+  // Order must start from 1, not 0 (0 causes null error)
   const apiData = {
     title: data.title,
-    index: data.order ?? 0,
+    index: data.order ?? 1,
   }
   const response = await apiPost<{
     id: string
@@ -200,9 +244,10 @@ export async function createLecture(
   data: CreateLectureInput
 ) {
   // Map CreateLectureInput (with 'order') to API format (with 'index')
+  // Order must start from 1, not 0 (0 causes null error)
   const apiData = {
     title: data.title,
-    index: data.order ?? 0,
+    index: data.order ?? 1,
   }
   const response = await apiPost<{
     id: string
@@ -273,12 +318,13 @@ export async function createContent(
   data: CreateContentInput
 ) {
   // Map CreateContentInput (with 'type' and 'order') to API format (with 'kind' and 'index')
+  // Order must start from 1, not 0 (0 causes null error)
   const apiData = {
     kind: data.type,
     text: data.text,
     mediaUrl: data.mediaUrl,
     metadata: data.metadata,
-    index: data.order ?? 0,
+    index: data.order ?? 1,
   }
   const response = await apiPost<{
     id: string
@@ -475,27 +521,108 @@ export async function getStudentDetails(userId: string) {
 }
 
 // Assignments
-export async function getInstructorAssignments() {
-  return apiGet<AssignmentWithCourse[]>("/assignments/instructor-assignments", {
-    requireAuth: true,
+export async function getInstructorAssignments(instructorId?: string, userRole?: string) {
+  const courses = await getInstructorCourses(instructorId, userRole).catch((error) => {
+    console.error("[InstructorAPI] Failed to fetch courses for assignments:", error)
+    return [] as Course[]
   })
+
+  if (courses.length === 0) {
+    return []
+  }
+
+  const assignmentResponses = await Promise.all(
+    courses.map(async (course) => {
+      try {
+        const assignments = await apiGet<AssignmentWithCourse[]>(
+          `/assignments/courses/${course.id}`,
+          { requireAuth: true }
+        )
+
+        return assignments.map((assignment) => ({
+          ...assignment,
+          course:
+            assignment.course ||
+            ({
+              id: course.id,
+              title: course.title,
+              code: course.code,
+            } as AssignmentWithCourse["course"]),
+        }))
+      } catch (error) {
+        console.error(
+          `[InstructorAPI] Failed to fetch assignments for course ${course.id}:`,
+          error
+        )
+        return []
+      }
+    })
+  )
+
+  return assignmentResponses.flat()
 }
 
 export async function createAssignment(
   courseId: string,
   data: CreateAssignmentInput
 ) {
+  // API only accepts: title, description, dueAt (maxScore and files not supported in create)
+  const payload: {
+    title: string
+    description: string
+    dueAt?: string
+  } = {
+    title: data.title,
+    description: data.description,
+  }
+  if (data.dueAt) {
+    payload.dueAt = data.dueAt
+  }
   return apiPost<AssignmentWithCourse>(
     `/assignments/courses/${courseId}`,
-    data,
+    payload,
     { requireAuth: true }
   )
 }
 
 export async function getAssignmentDetails(assignmentId: string) {
-  return apiGet<AssignmentWithCourse>(`/assignments/${assignmentId}`, {
+  const assignment = await apiGet<AssignmentWithCourse>(`/assignments/${assignmentId}`, {
     requireAuth: true,
   })
+  
+  // Ensure course data is included - fetch if missing
+  if (!assignment.course && assignment.courseId) {
+    try {
+      const course = await apiGet<Course>(`/courses/${assignment.courseId}`, {
+        requireAuth: true,
+      })
+      assignment.course = {
+        id: course.id,
+        title: course.title,
+        code: course.code,
+      }
+    } catch (error) {
+      console.warn(`[InstructorAPI] Failed to fetch course ${assignment.courseId} for assignment:`, error)
+    }
+  }
+  
+  return assignment
+}
+
+export async function getInstructorAssignmentById(
+  assignmentId: string,
+  instructorId?: string,
+  userRole?: string
+) {
+  try {
+    return await getAssignmentDetails(assignmentId)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      const assignments = await getInstructorAssignments(instructorId, userRole).catch(() => [])
+      return assignments.find((assignment) => assignment.id === assignmentId) || null
+    }
+    throw error
+  }
 }
 
 export async function updateAssignment(

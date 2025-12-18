@@ -52,7 +52,7 @@ export interface IncompleteTask {
   courseId: string
   courseTitle: string
   title: string
-  dueDate?: string
+  dueAt?: string
   priority: "HIGH" | "MEDIUM" | "LOW"
 }
 

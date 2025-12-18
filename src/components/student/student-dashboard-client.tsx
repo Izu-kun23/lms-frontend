@@ -31,8 +31,8 @@ function getAssignmentStatus(
   }
 
   // Check if overdue
-  if (assignment.dueDate) {
-    const dueDate = new Date(assignment.dueDate)
+  if (assignment.dueAt) {
+    const dueDate = new Date(assignment.dueAt)
     const now = new Date()
     if (now > dueDate && !submission) {
       return "overdue"
@@ -160,7 +160,7 @@ export function StudentDashboardClient({
                       id={assignment.id}
                       title={assignment.title}
                       courseName={assignment.course?.title || "Unknown Course"}
-                      dueDate={assignment.dueDate || new Date().toISOString()}
+                      dueAt={assignment.dueAt || new Date().toISOString()}
                       status={status}
                       score={submission?.grade}
                       maxScore={(assignment as any).maxScore}

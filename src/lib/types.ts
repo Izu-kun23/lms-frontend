@@ -219,7 +219,8 @@ export interface Assignment {
   course?: Course
   title: string
   description: string
-  dueDate?: string
+  dueAt?: string
+  maxScore?: number
   createdAt: string
   updatedAt: string
 }
