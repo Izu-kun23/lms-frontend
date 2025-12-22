@@ -1,8 +1,22 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ForgotPasswordForm } from "@/components/shared/forgot-password-form"
+import { ResetPasswordForm } from "@/components/shared/reset-password-form"
+import { redirect } from "next/navigation"
 
-export default function ForgotPasswordPage() {
+interface ResetPasswordPageProps {
+  searchParams: Promise<{
+    token?: string
+  }>
+}
+
+export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+  const params = await searchParams
+  const token = params.token
+
+  if (!token) {
+    redirect("/forgot-password")
+  }
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
@@ -21,18 +35,19 @@ export default function ForgotPasswordPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <ForgotPasswordForm />
+            <ResetPasswordForm token={token} />
           </div>
         </div>
       </div>
       <div className="bg-muted relative hidden lg:block">
         <img
           src="/sideimage.jpeg"
-          alt="Forgot password background"
+          alt="Reset password background"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
       </div>
     </div>
   )
 }
+
 

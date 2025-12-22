@@ -13,20 +13,25 @@ import {
 } from "@/components/ui/sheet"
 import type { CourseWithModules } from "@/types/course"
 import type { Module, Lecture } from "@/types/course"
+import type { CourseProgress } from "@/lib/types"
 import { apiClient } from "@/lib/api"
 import { CreateModuleModal } from "./create-module-modal"
 import { CreateLectureModal } from "./create-lecture-modal"
+import { CourseEnrolledStudents } from "./course-enrolled-students"
+import { CourseProgressCard } from "@/components/shared/course-progress-card"
 import Link from "next/link"
 import Image from "next/image"
 
 interface InstructorCourseDetailClientProps {
   course: CourseWithModules
   modules: Module[]
+  progress?: CourseProgress
 }
 
 export function InstructorCourseDetailClient({
   course,
   modules: initialModules,
+  progress,
 }: InstructorCourseDetailClientProps) {
   const [modules, setModules] = useState<Module[]>(initialModules)
   const [moduleLectures, setModuleLectures] = useState<Record<string, Lecture[]>>({})
@@ -117,6 +122,19 @@ export function InstructorCourseDetailClient({
           </div>
         )}
       </div>
+
+      {/* Course Progress (if instructor is also enrolled) */}
+      {progress && (
+        <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+          <div className="lg:col-span-1">
+            <CourseProgressCard
+              progress={progress}
+              courseId={course.id}
+              showContinueButton={false}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Modules Section */}
       <div className="space-y-6">
@@ -268,6 +286,11 @@ export function InstructorCourseDetailClient({
             ))}
           </div>
         )}
+      </div>
+
+      {/* Enrolled Students Section */}
+      <div className="space-y-6">
+        <CourseEnrolledStudents courseId={course.id} />
       </div>
 
       {/* Lectures Modal */}

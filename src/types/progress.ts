@@ -78,8 +78,9 @@ export interface OverallProgress {
 
 // Request types
 export interface UpdateProgressInput {
-  completed: boolean
+  completed?: boolean
   lastPosition?: number
+  lastContentId?: string
   timeSpent?: number
 }
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import {
   getCourseDetails,
   getCourseModules,
+  getCourseProgress,
 } from "@/lib/server/student-api"
 import { CourseDetailClient } from "@/components/student/course-detail-client"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -25,14 +26,15 @@ export default async function CourseDetailPage({
   const { id } = await params
 
   try {
-    const [course, modules] = await Promise.all([
+    const [course, modules, progress] = await Promise.all([
       getCourseDetails(id),
       getCourseModules(id),
+      getCourseProgress(id).catch(() => null),
     ])
 
     return (
       <Suspense fallback={<CourseDetailSkeleton />}>
-        <CourseDetailClient course={course} modules={modules} />
+        <CourseDetailClient course={course} modules={modules} progress={progress || undefined} />
       </Suspense>
     )
   } catch (error) {

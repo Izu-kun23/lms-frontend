@@ -64,7 +64,21 @@ export interface CourseProgress {
   totalLectures: number
   completedLectures: number
   progressPercentage: number
+  currentLectureId?: string
+  lastActivityAt?: string
+  // Keep lastAccessedAt for backward compatibility
   lastAccessedAt?: string
+  // Session data (when using with-session endpoint)
+  session?: {
+    id: string
+    userId: string
+    courseId: string
+    lectureId?: string
+    startTime: string
+    endTime?: string
+    duration?: number
+    createdAt: string
+  }
 }
 
 export interface ResumeData {

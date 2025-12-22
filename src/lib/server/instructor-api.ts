@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiPut, apiDelete, ApiError } from "./api-client"
-import type { Course, User } from "@/lib/types"
+import type { Course, User, CourseProgress } from "@/lib/types"
 import type {
   CourseWithModules,
   Module,
@@ -461,59 +461,102 @@ export async function getInstructorStudents() {
 // Get students enrolled in a specific course
 export async function getCourseStudents(courseId: string) {
   try {
-    // Get enrollments for the course
-    const enrollments = await apiGet<any[]>(`/courses/${courseId}/enrollments`, {
+    // Use the enrolled-students endpoint which returns formatted student data
+    const enrolledStudents = await apiGet<Array<{
+      enrollmentId: string
+      studentId: string
+      firstName: string
+      lastName: string
+      email: string
+      studentIdNumber?: number
+      enrollmentStatus: string
+      enrolledAt: string
+    }>>(`/courses/${courseId}/enrolled-students`, {
       requireAuth: true,
     })
     
-    // Fetch full user details for each enrolled student
-    const studentsWithDetails = await Promise.all(
-      enrollments.map(async (enrollment) => {
-        const userId = enrollment.userId || enrollment.user?.id
-        if (!userId) return null
-        
-        try {
-          const userDetails = await apiGet<User>(`/users/${userId}`, {
-            requireAuth: true,
-          })
-          return {
-            id: userId,
-            userId: userId,
-            user: userDetails,
-            enrollment: enrollment,
-            enrollmentStatus: enrollment.status || "ACTIVE",
-            enrolledAt: enrollment.createdAt,
-          }
-        } catch (error) {
-          console.error(`Failed to fetch user details for ${userId}:`, error)
-          // Return basic info if user fetch fails
-          return {
-            id: userId,
-            userId: userId,
-            user: enrollment.user || {
-              id: userId,
-              firstName: enrollment.firstName,
-              lastName: enrollment.lastName,
-              email: enrollment.email,
-            },
-            enrollment: enrollment,
-            enrollmentStatus: enrollment.status || "ACTIVE",
-            enrolledAt: enrollment.createdAt,
-          }
-        }
-      })
-    )
-    
-    // Filter out null values
-    return studentsWithDetails.filter((student) => student !== null)
+    // Map to a consistent format
+    return enrolledStudents.map((student) => ({
+      id: student.studentId,
+      userId: student.studentId,
+      studentId: student.studentId,
+      enrollmentId: student.enrollmentId,
+      user: {
+        id: student.studentId,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+      },
+      enrollmentStatus: student.enrollmentStatus,
+      enrolledAt: student.enrolledAt,
+      studentIdNumber: student.studentIdNumber,
+    }))
   } catch (error) {
-    console.error(`Failed to fetch students for course ${courseId}:`, error)
-    return []
+    console.error(`Failed to fetch enrolled students for course ${courseId}:`, error)
+    // Fallback to old endpoint if new one fails
+    try {
+      const enrollments = await apiGet<any[]>(`/courses/${courseId}/enrollments`, {
+        requireAuth: true,
+      })
+      
+      const studentsWithDetails = await Promise.all(
+        enrollments.map(async (enrollment) => {
+          const userId = enrollment.userId || enrollment.user?.id
+          if (!userId) return null
+          
+          try {
+            const userDetails = await apiGet<User>(`/users/${userId}`, {
+              requireAuth: true,
+            })
+            return {
+              id: userId,
+              userId: userId,
+              user: userDetails,
+              enrollment: enrollment,
+              enrollmentStatus: enrollment.status || "ACTIVE",
+              enrolledAt: enrollment.createdAt,
+            }
+          } catch (error) {
+            console.error(`Failed to fetch user details for ${userId}:`, error)
+            return {
+              id: userId,
+              userId: userId,
+              user: enrollment.user || {
+                id: userId,
+                firstName: enrollment.firstName,
+                lastName: enrollment.lastName,
+                email: enrollment.email,
+              },
+              enrollment: enrollment,
+              enrollmentStatus: enrollment.status || "ACTIVE",
+              enrolledAt: enrollment.createdAt,
+            }
+          }
+        })
+      )
+      
+      return studentsWithDetails.filter((student) => student !== null)
+    } catch (fallbackError) {
+      console.error(`Failed to fetch students for course ${courseId} (fallback):`, fallbackError)
+      return []
+    }
   }
 }
 
 export async function getStudentProgress(userId: string) {
   return apiGet<any>(`/progress/users/${userId}`, { requireAuth: true })
+}
+
+export async function getCourseProgress(courseId: string) {
+  return apiGet<CourseProgress>(`/progress/courses/${courseId}`, {
+    requireAuth: true,
+  })
+}
+
+export async function getCourseProgressWithSession(courseId: string) {
+  return apiGet<CourseProgress>(`/progress/courses/${courseId}/with-session`, {
+    requireAuth: true,
+  })
 }
 
 export async function getStudentDetails(userId: string) {

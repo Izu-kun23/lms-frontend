@@ -22,6 +22,7 @@ import type {
   Message,
 } from "./types"
 import type { Lecture, Module, Content } from "@/types/course"
+import type { Quiz, QuizAttempt, SubmitQuizInput } from "@/types/quiz"
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://lmsbackend-dev.up.railway.app/api"
@@ -91,10 +92,11 @@ class ApiClient {
         const originalRequest = error.config as any
 
         // If error is 401 and not already trying to refresh
-        // Skip token refresh for auth endpoints (login, register, forgot-password, refresh)
+        // Skip token refresh for auth endpoints (login, register, forgot-password, reset-password, refresh)
         const isAuthEndpoint = originalRequest.url?.includes("/auth/login") || 
                                originalRequest.url?.includes("/auth/register") ||
                                originalRequest.url?.includes("/auth/forgot-password") ||
+                               originalRequest.url?.includes("/auth/reset-password") ||
                                originalRequest.url?.includes("/auth/refresh")
         
         if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
@@ -349,6 +351,14 @@ class ApiClient {
     return response.data
   }
 
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const response = await this.client.post<{ message: string }>("/auth/reset-password", {
+      token,
+      newPassword,
+    })
+    return response.data
+  }
+
   // Schools
   async getSchools(): Promise<School[]> {
     const response = await this.client.get("/schools", {
@@ -498,6 +508,29 @@ class ApiClient {
     }
     
     const response = await this.client.put<Course>(`/courses/${courseId}`, payload)
+    return response.data
+  }
+
+  async getCourseEnrolledStudents(courseId: string): Promise<Array<{
+    enrollmentId: string
+    studentId: string
+    firstName: string
+    lastName: string
+    email: string
+    studentIdNumber?: number
+    enrollmentStatus: string
+    enrolledAt: string
+  }>> {
+    const response = await this.client.get<Array<{
+      enrollmentId: string
+      studentId: string
+      firstName: string
+      lastName: string
+      email: string
+      studentIdNumber?: number
+      enrollmentStatus: string
+      enrolledAt: string
+    }>>(`/courses/${courseId}/enrolled-students`)
     return response.data
   }
 
@@ -781,19 +814,208 @@ class ApiClient {
     return response.data
   }
 
-  async getResumeData(): Promise<ResumeData[]> {
-    const response = await this.client.get<ResumeData[]>("/progress/resume")
+  async updateLectureProgress(
+    lectureId: string,
+    data: {
+      completed?: boolean
+      lastPosition?: number
+      lastContentId?: string
+      timeSpent?: number
+    }
+  ): Promise<any> {
+    // Build payload - include all provided fields
+    const payload: {
+      completed?: boolean
+      lastPosition?: number
+      lastContentId?: string
+      timeSpent?: number
+    } = {}
+    
+    // Always include completed if provided (it's the main field for marking complete)
+    if (data.completed !== undefined) {
+      payload.completed = data.completed
+    }
+    if (data.lastPosition !== undefined) {
+      payload.lastPosition = data.lastPosition
+    }
+    if (data.lastContentId !== undefined) {
+      payload.lastContentId = data.lastContentId
+    }
+    if (data.timeSpent !== undefined) {
+      payload.timeSpent = data.timeSpent
+    }
+    
+    const response = await this.client.put(`/progress/lectures/${lectureId}`, payload)
     return response.data
   }
 
-  async updateLectureProgress(lectureId: string, completed: boolean): Promise<any> {
-    const response = await this.client.put(`/progress/lectures/${lectureId}`, { completed })
+  async getLectureProgress(lectureId: string): Promise<{
+    id: string
+    userId: string
+    lectureId: string
+    completed: boolean
+    lastPosition?: number
+    lastContentId?: string
+    timeSpent?: number
+    autoSavedAt?: string
+    startedAt?: string
+    completedAt?: string
+    updatedAt: string
+  }> {
+    const response = await this.client.get(`/progress/lectures/${lectureId}`)
     return response.data
   }
 
-  async getCourseProgress(courseId: string): Promise<any> {
-    const response = await this.client.get(`/progress/courses/${courseId}`)
+  async autoSaveLectureProgress(
+    lectureId: string,
+    data: {
+      lastPosition?: number
+      lastContentId?: string
+      timeSpent?: number
+      sessionData?: Record<string, any>
+    }
+  ): Promise<any> {
+    const payload: {
+      lastPosition?: number
+      lastContentId?: string
+      timeSpent?: number
+      sessionData?: Record<string, any>
+    } = {}
+    
+    if (data.lastPosition !== undefined) {
+      payload.lastPosition = data.lastPosition
+    }
+    if (data.lastContentId !== undefined) {
+      payload.lastContentId = data.lastContentId
+    }
+    if (data.timeSpent !== undefined) {
+      payload.timeSpent = data.timeSpent
+    }
+    if (data.sessionData !== undefined) {
+      payload.sessionData = data.sessionData
+    }
+    
+    const response = await this.client.post(`/progress/lectures/${lectureId}/auto-save`, payload)
     return response.data
+  }
+
+  async getCourseSession(courseId: string): Promise<{
+    id: string
+    userId: string
+    courseId: string
+    currentLectureId?: string
+    lastActivityAt?: string
+    sessionData?: Record<string, any>
+    createdAt: string
+    updatedAt: string
+  }> {
+    const response = await this.client.get(`/progress/sessions/course/${courseId}`)
+    return response.data
+  }
+
+  async getUserProgress(userId: string): Promise<CourseProgress[]> {
+    const response = await this.client.get<CourseProgress[]>(`/progress/users/${userId}`)
+    return response.data
+  }
+
+  async getResumeData(): Promise<{
+    sessions: Array<{
+      id: string
+      userId: string
+      courseId: string
+      currentLectureId?: string
+      lastActivityAt?: string
+      sessionData?: Record<string, any>
+      createdAt: string
+      updatedAt: string
+    }>
+    incompleteTasks: Array<{
+      id: string
+      userId: string
+      taskType: string
+      taskId: string
+      courseId: string
+      title: string
+      description?: string
+      dueDate?: string
+      priority: string
+      isActive: boolean
+      createdAt: string
+      updatedAt: string
+    }>
+    recentProgress: Array<{
+      id: string
+      userId: string
+      lectureId: string
+      completed: boolean
+      lastPosition?: number
+      lastContentId?: string
+      timeSpent?: number
+      autoSavedAt?: string
+      startedAt?: string
+      completedAt?: string
+      updatedAt: string
+    }>
+  }> {
+    const response = await this.client.get(`/progress/resume`)
+    return response.data
+  }
+
+  async getCourseProgress(courseId: string): Promise<CourseProgress> {
+    const response = await this.client.get<{
+      courseId: string
+      courseTitle: string
+      totalLectures: number
+      completedLectures: number
+      progressPercentage: number
+      currentLectureId?: string
+      lastActivityAt?: string
+    }>(`/progress/courses/${courseId}`)
+    // Map API response to CourseProgress type
+    return {
+      courseId: response.data.courseId,
+      courseTitle: response.data.courseTitle,
+      totalLectures: response.data.totalLectures,
+      completedLectures: response.data.completedLectures,
+      progressPercentage: response.data.progressPercentage,
+      currentLectureId: response.data.currentLectureId,
+      lastActivityAt: response.data.lastActivityAt,
+      lastAccessedAt: response.data.lastActivityAt, // For backward compatibility
+    }
+  }
+
+  async getCourseProgressWithSession(courseId: string): Promise<CourseProgress> {
+    const response = await this.client.get<{
+      courseId: string
+      courseTitle: string
+      totalLectures: number
+      completedLectures: number
+      progressPercentage: number
+      currentLectureId?: string
+      lastActivityAt?: string
+      session?: {
+        id: string
+        userId: string
+        courseId: string
+        lectureId?: string
+        startTime: string
+        endTime?: string
+        duration?: number
+        createdAt: string
+      }
+    }>(`/progress/courses/${courseId}/with-session`)
+    // Map API response to CourseProgress type
+    return {
+      courseId: response.data.courseId,
+      courseTitle: response.data.courseTitle,
+      totalLectures: response.data.totalLectures,
+      completedLectures: response.data.completedLectures,
+      progressPercentage: response.data.progressPercentage,
+      currentLectureId: response.data.currentLectureId,
+      lastActivityAt: response.data.lastActivityAt,
+      lastAccessedAt: response.data.lastActivityAt, // For backward compatibility
+      session: response.data.session,
+    }
   }
 
   // Assignments
@@ -813,8 +1035,46 @@ class ApiClient {
     return response.data
   }
 
-  async submitAssignment(assignmentId: string, data: { fileUrl?: string; text?: string }): Promise<AssignmentSubmission> {
-    const response = await this.client.post<AssignmentSubmission>(`/assignments/${assignmentId}/submit`, data)
+  async submitAssignment(
+    assignmentId: string,
+    data: { fileUrl?: string; fileUrls?: string[]; files?: File[]; text?: string; notes?: string }
+  ): Promise<AssignmentSubmission> {
+    // If files are provided, use FormData
+    if (data.files && data.files.length > 0) {
+      const formData = new FormData()
+      
+      data.files.forEach((file) => {
+        formData.append("files", file)
+      })
+      
+      if (data.text) {
+        formData.append("text", data.text)
+      }
+      
+      if (data.notes) {
+        formData.append("notes", data.notes)
+      }
+      
+      const response = await this.client.post<AssignmentSubmission>(
+        `/assignments/${assignmentId}/submit`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      )
+      return response.data
+    }
+    
+    // Otherwise, use JSON
+    const payload: { fileUrl?: string; fileUrls?: string[]; text?: string; notes?: string } = {}
+    if (data.fileUrl) payload.fileUrl = data.fileUrl
+    if (data.fileUrls) payload.fileUrls = data.fileUrls
+    if (data.text) payload.text = data.text
+    if (data.notes) payload.notes = data.notes
+    
+    const response = await this.client.post<AssignmentSubmission>(`/assignments/${assignmentId}/submit`, payload)
     return response.data
   }
 
@@ -859,6 +1119,27 @@ class ApiClient {
 
   async deleteAssignment(assignmentId: string): Promise<void> {
     await this.client.delete(`/assignments/${assignmentId}`)
+  }
+
+  // Quizzes
+  async getQuizDetails(quizId: string): Promise<Quiz> {
+    const response = await this.client.get<Quiz>(`/quizzes/${quizId}`)
+    return response.data
+  }
+
+  async submitQuizAttempt(quizId: string, data: SubmitQuizInput): Promise<QuizAttempt> {
+    const response = await this.client.post<QuizAttempt>(`/quizzes/${quizId}/attempts`, data)
+    return response.data
+  }
+
+  async getQuizAttempts(quizId: string): Promise<QuizAttempt[]> {
+    const response = await this.client.get<QuizAttempt[]>(`/quizzes/${quizId}/attempts`)
+    return response.data
+  }
+
+  async validateQuizAnswers(quizId: string, answers: Array<{ questionId: string; answer: string }>): Promise<{ score: number; feedback: any[] }> {
+    const response = await this.client.post<{ score: number; feedback: any[] }>(`/quizzes/${quizId}/validate`, { answers })
+    return response.data
   }
 
   // Messages

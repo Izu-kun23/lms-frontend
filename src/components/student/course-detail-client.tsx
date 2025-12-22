@@ -13,17 +13,20 @@ import {
 } from "@/components/ui/sheet"
 import type { CourseWithModules } from "@/types/course"
 import type { Module, Lecture } from "@/types/course"
+import type { CourseProgress } from "@/lib/types"
 import { apiClient } from "@/lib/api"
 import Link from "next/link"
 
 interface CourseDetailClientProps {
   course: CourseWithModules
   modules: Module[]
+  progress?: CourseProgress
 }
 
 export function CourseDetailClient({
   course,
   modules,
+  progress,
 }: CourseDetailClientProps) {
   const [moduleLectures, setModuleLectures] = useState<Record<string, Lecture[]>>({})
   const [loadingLectures, setLoadingLectures] = useState<Set<string>>(new Set())
@@ -101,73 +104,43 @@ export function CourseDetailClient({
             {modules.map((module) => (
               <div
                 key={module.id}
-                className="bg-white block max-w-sm p-6 border border-border rounded-lg flex flex-col min-h-[280px]"
+                className="bg-white max-w-sm p-6 border border-border rounded-lg flex flex-col min-h-[280px]"
               >
-                <div className="flex items-start gap-2 mb-3">
-                  <BookOpen className="w-7 h-7 mb-3 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-start gap-2 mb-3">
+                    <BookOpen className="w-7 h-7 mb-3 text-muted-foreground shrink-0" />
+                  </div>
+                  
+                  <h5 className="mb-2 text-lg font-semibold tracking-tight text-foreground line-clamp-2">
+                    {module.title}
+                  </h5>
+                  
+                  {module.description && (
+                    <p className="mb-3 text-sm text-muted-foreground line-clamp-3">
+                      {module.description}
+                    </p>
+                  )}
                 </div>
                 
-                <h5 className="mb-2 text-lg font-semibold tracking-tight text-foreground line-clamp-2">
-                  {module.title}
-                </h5>
-                
-                {module.description && (
-                  <p className="mb-3 text-sm text-muted-foreground line-clamp-3">
-                    {module.description}
-                  </p>
-                )}
-                
-                <div className="mt-2 flex-1">
+                <div className="mt-auto pt-4 border-t">
                   {loadingLectures.has(module.id) ? (
-                    <div className="flex items-center justify-center py-6">
+                    <div className="flex items-center justify-center py-2">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       <span className="ml-2 text-xs text-muted-foreground">
                         Loading lectures...
                       </span>
                     </div>
                   ) : moduleLectures[module.id]?.length > 0 ? (
-                    <>
-                      <div className="space-y-2">
-                        {moduleLectures[module.id].slice(0, 4).map((lecture) => (
-                          <Link
-                            key={lecture.id}
-                            href={`/student/courses/${course.id}/lectures/${lecture.id}`}
-                            className="inline-flex font-medium items-center text-orange-600 hover:underline text-sm"
-                          >
-                            {lecture.title}
-                            <svg
-                              className="w-4 h-4 ms-2 rtl:rotate-[270deg]"
-                              aria-hidden="true"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke="currentColor"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M18 14v4.833A1.166 1.166 0 0 1 16.833 20H5.167A1.167 1.167 0 0 1 4 18.833V7.167A1.166 1.166 0 0 1 5.167 6h4.618m4.447-2H20v5.768m-7.889 2.121 7.778-7.778"
-                              />
-                            </svg>
-                          </Link>
-                        ))}
-                      </div>
-                      {moduleLectures[module.id].length > 4 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setOpenModalModuleId(module.id)}
-                          className="mt-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 text-sm"
-                        >
-                          View more ({moduleLectures[module.id].length - 4} more)
-                        </Button>
-                      )}
-                    </>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOpenModalModuleId(module.id)}
+                      className="w-full text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20 text-sm"
+                    >
+                      View more ({moduleLectures[module.id].length} lecture{moduleLectures[module.id].length !== 1 ? "s" : ""})
+                    </Button>
                   ) : (
-                    <p className="text-xs text-muted-foreground py-2">
+                    <p className="text-xs text-muted-foreground text-center py-2">
                       No lectures available in this module
                     </p>
                   )}

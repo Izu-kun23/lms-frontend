@@ -4,6 +4,7 @@ import {
   getCourseDetails,
   getCourseModules,
   getStudentDetails,
+  getCourseProgress,
 } from "@/lib/server/instructor-api"
 import { apiGet } from "@/lib/server/api-client"
 import type { User } from "@/lib/types"
@@ -33,9 +34,10 @@ export default async function InstructorCourseDetailPage({
   const { id } = await params
 
   try {
-    const [course, modules] = await Promise.all([
+    const [course, modules, progress] = await Promise.all([
       getCourseDetails(id),
       getCourseModules(id).catch(() => []),
+      getCourseProgress(id).catch(() => null),
     ])
 
     // If instructor info is not included in the course, fetch it
@@ -81,6 +83,7 @@ export default async function InstructorCourseDetailPage({
         <InstructorCourseDetailClient
           course={courseWithInstructor}
           modules={modules}
+          progress={progress || undefined}
         />
       </Suspense>
     )

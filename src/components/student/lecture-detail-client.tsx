@@ -24,9 +24,42 @@ export function LectureDetailClient({
   const handleComplete = async () => {
     setIsCompleting(true)
     try {
-      await apiClient.updateLectureProgress(lecture.id, true)
-    } catch (error) {
+      // Try to get existing progress first to merge with update
+      let existingProgress = null
+      try {
+        existingProgress = await apiClient.getLectureProgress(lecture.id)
+      } catch (error) {
+        // If no progress exists yet, that's okay - we'll create new progress
+      }
+
+      // Build update payload
+      const updatePayload: {
+        completed: boolean
+        lastPosition?: number
+        lastContentId?: string
+        timeSpent?: number
+      } = {
+        completed: true,
+      }
+
+      // Include existing progress data if available (to preserve state)
+      if (existingProgress) {
+        if (existingProgress.lastPosition !== undefined && existingProgress.lastPosition > 0) {
+          updatePayload.lastPosition = existingProgress.lastPosition
+        }
+        if (existingProgress.lastContentId) {
+          updatePayload.lastContentId = existingProgress.lastContentId
+        }
+        if (existingProgress.timeSpent !== undefined && existingProgress.timeSpent > 0) {
+          updatePayload.timeSpent = existingProgress.timeSpent
+        }
+      }
+
+      await apiClient.updateLectureProgress(lecture.id, updatePayload)
+    } catch (error: any) {
       console.error("Failed to update lecture progress:", error)
+      console.error("Error details:", error.response?.data || error.message)
+      // You might want to show a toast notification here
     } finally {
       setIsCompleting(false)
     }

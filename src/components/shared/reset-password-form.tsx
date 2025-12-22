@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,28 +13,51 @@ import {
 import { Input } from "@/components/ui/input"
 import { apiClient } from "@/lib/api"
 import Link from "next/link"
+import { toast } from "sonner"
 
-export function ForgotPasswordForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
+interface ResetPasswordFormProps {
+  token: string
+  className?: string
+}
+
+export function ResetPasswordForm({ token, className, ...props }: ResetPasswordFormProps & React.ComponentProps<"form">) {
+  const router = useRouter()
   const [error, setError] = React.useState<string>("")
-  const [success, setSuccess] = React.useState<string>("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
-    setSuccess("")
     setIsSubmitting(true)
 
     try {
       const formData = new FormData(event.currentTarget)
-      const email = formData.get("email") as string
-      await apiClient.forgotPassword(email)
-      setSuccess("Password reset instructions have been sent to your email. Please check your inbox and click the link to reset your password.")
+      const newPassword = formData.get("newPassword") as string
+      const confirmPassword = formData.get("confirmPassword") as string
+
+      if (!newPassword || newPassword.length < 6) {
+        setError("Password must be at least 6 characters long")
+        setIsSubmitting(false)
+        return
+      }
+
+      if (newPassword !== confirmPassword) {
+        setError("Passwords do not match")
+        setIsSubmitting(false)
+        return
+      }
+
+      await apiClient.resetPassword(token, newPassword)
+      toast.success("Password reset successfully! Redirecting to login...")
+      
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        router.push("/login")
+      }, 2000)
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to send password reset email. Please try again.")
+      const errorMessage = err?.response?.data?.message || err?.message || "Failed to reset password. Please try again."
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -45,31 +69,42 @@ export function ForgotPasswordForm({
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Reset your password</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Enter your email address and we'll send you instructions to reset your password
+            Enter your new password below
           </p>
         </div>
         <Field>
-          <FieldLabel htmlFor="email">Email Address</FieldLabel>
+          <FieldLabel htmlFor="newPassword">New Password</FieldLabel>
           <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="student@university.edu"
+            id="newPassword"
+            name="newPassword"
+            type="password"
+            placeholder="Enter new password"
             required
+            minLength={6}
             className="rounded-full focus-visible:ring-orange-500 focus-visible:border-orange-500"
           />
           <FieldDescription>
-            Enter the email address associated with your account.
+            Password must be at least 6 characters long.
+          </FieldDescription>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirm new password"
+            required
+            minLength={6}
+            className="rounded-full focus-visible:ring-orange-500 focus-visible:border-orange-500"
+          />
+          <FieldDescription>
+            Re-enter your new password to confirm.
           </FieldDescription>
         </Field>
         {error && (
           <FieldDescription className="text-center text-red-600">
             {error}
-          </FieldDescription>
-        )}
-        {success && (
-          <FieldDescription className="text-center text-green-600">
-            {success}
           </FieldDescription>
         )}
         <Field>
@@ -78,7 +113,7 @@ export function ForgotPasswordForm({
             className="bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 w-full rounded-full"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Sending..." : "Send Reset Instructions"}
+            {isSubmitting ? "Resetting..." : "Reset Password"}
           </Button>
         </Field>
         <Field>
@@ -90,4 +125,5 @@ export function ForgotPasswordForm({
     </form>
   )
 }
+
 
