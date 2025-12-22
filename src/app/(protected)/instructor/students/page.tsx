@@ -36,16 +36,29 @@ export default async function InstructorStudentsPage() {
         const students = await getCourseStudents(course.id)
         return {
           course,
-          students: students.map((student) => ({
-            enrollmentId: student.enrollmentId || student.id,
-            studentId: student.studentId || student.userId || student.id,
-            firstName: student.user?.firstName || "",
-            lastName: student.user?.lastName || "",
-            email: student.user?.email || "",
-            studentIdNumber: student.studentIdNumber,
-            enrollmentStatus: student.enrollmentStatus || "ACTIVE",
-            enrolledAt: student.enrolledAt || "",
-          })),
+          students: students.map((student: any) => {
+            // Handle both API response formats
+            const enrollmentId = 
+              student.enrollmentId ||
+              (student.enrollment && student.enrollment.id) ||
+              student.id
+            
+            const studentId = 
+              student.studentId ||
+              student.userId ||
+              student.id
+            
+            return {
+              enrollmentId,
+              studentId,
+              firstName: student.user?.firstName || "",
+              lastName: student.user?.lastName || "",
+              email: student.user?.email || "",
+              studentIdNumber: student.studentIdNumber,
+              enrollmentStatus: student.enrollmentStatus || "ACTIVE",
+              enrolledAt: student.enrolledAt || "",
+            }
+          }),
         }
       } catch (error) {
         console.error(`Failed to fetch students for course ${course.id}:`, error)
