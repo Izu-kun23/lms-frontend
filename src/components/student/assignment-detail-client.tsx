@@ -66,6 +66,10 @@ export function StudentAssignmentDetailClient({ assignment }: AssignmentDetailCl
             submittedAt: submissionData.submittedAt,
             grade: submissionData.grade,
             feedback: submissionData.feedback,
+            status: submissionData.status,
+            createdAt: submissionData.createdAt,
+            updatedAt: submissionData.updatedAt,
+            gradedAt: submissionData.gradedAt,
             assignment: assignment,
           })
           // Pre-fill form with existing submission
