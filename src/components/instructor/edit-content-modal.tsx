@@ -229,7 +229,7 @@ export function EditContentModal({
                   placeholder="https://example.com/video.mp4"
                   value={formData.mediaUrl}
                   onChange={(e) => handleInputChange("mediaUrl", e.target.value)}
-                  required={formData.kind !== "TEXT" && formData.kind !== "LIVE"}
+                  required={formData.kind !== "LIVE"}
                   className="mt-2 rounded-lg"
                   disabled={isSubmitting}
                 />
