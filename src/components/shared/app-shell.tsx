@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { UserMenu } from "./user-menu"
-import { Sidebar } from "@/components/student/sidebar"
+import { StudentSidebar } from "@/components/student/student-sidebar"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { isLoading, user, isAuthenticated } = useAuth()
@@ -52,8 +52,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 border-r bg-background transition-transform lg:static lg:z-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <StudentSidebar role={user.role} />
+      </aside>
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden lg:ml-64">
