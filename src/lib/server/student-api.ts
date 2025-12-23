@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiPut } from "./api-client"
-import type { Course } from "@/lib/types"
+import type { Course, CourseProgress } from "@/lib/types"
 import type {
   CourseWithModules,
   Module,
@@ -7,7 +7,6 @@ import type {
   Content,
 } from "@/types/course"
 import type {
-  CourseProgress,
   OverallProgress,
   ProgressActivity,
   IncompleteTask,
