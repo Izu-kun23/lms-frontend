@@ -23,7 +23,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "LMS - Login & Register",
+  title: "Project career LMS",
   description: "Learning Management System",
 };
 
