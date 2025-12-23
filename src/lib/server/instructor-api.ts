@@ -45,16 +45,27 @@ async function resolveInstructorFilter(
   let resolvedRole = userRole?.toUpperCase()
   let resolvedInstructorId = instructorId
 
-  if (!resolvedInstructorId || !resolvedRole) {
-    try {
-      const currentUser = await apiGet<User>("/users/me", { requireAuth: true })
-      resolvedRole = resolvedRole || currentUser.role?.toUpperCase()
-      if (!resolvedInstructorId && currentUser.role?.toUpperCase() === "INSTRUCTOR") {
+  // Always fetch current user to ensure we have the correct role and ID
+  try {
+    const currentUser = await apiGet<User>("/users/me", { requireAuth: true })
+    resolvedRole = resolvedRole || currentUser.role?.toUpperCase()
+    
+    // For instructors, always use their ID to filter courses
+    // Only allow override if explicitly provided (for admins viewing specific instructor's courses)
+    if (currentUser.role?.toUpperCase() === "INSTRUCTOR") {
+      // If no instructorId was explicitly provided, use the current user's ID
+      // This ensures instructors only see their own courses
+      if (!instructorId) {
         resolvedInstructorId = currentUser.id
       }
-    } catch (error) {
-      console.warn("[InstructorAPI] Failed to resolve instructor filter", error)
+      // If an instructorId was provided but it doesn't match the current user,
+      // still use current user's ID (instructors can't view other instructors' courses)
+      else if (instructorId !== currentUser.id) {
+        resolvedInstructorId = currentUser.id
+      }
     }
+  } catch (error) {
+    console.warn("[InstructorAPI] Failed to resolve instructor filter", error)
   }
 
   const isAdmin = resolvedRole ? ADMIN_ROLES.has(resolvedRole) : false
@@ -108,10 +119,21 @@ export async function getInstructorCourses(instructorId?: string, userRole?: str
   return apiGet<Course[]>(`/courses?${params.toString()}`, { requireAuth: true })
 }
 
-export async function getCourseDetails(courseId: string) {
-  return apiGet<CourseWithModules>(`/courses/${courseId}?include=instructor`, {
+export async function getCourseDetails(courseId: string, instructorId?: string, userRole?: string) {
+  const course = await apiGet<CourseWithModules>(`/courses/${courseId}?include=instructor`, {
     requireAuth: true,
   })
+
+  // For instructors, verify they are assigned to this course
+  const { instructorId: resolvedInstructorId, role } = await resolveInstructorFilter(instructorId, userRole)
+  const isAdmin = role ? ADMIN_ROLES.has(role) : false
+  
+  // If user is an instructor (not admin), verify they own this course
+  if (!isAdmin && resolvedInstructorId && course.instructorId !== resolvedInstructorId) {
+    throw new Error("Access denied: You can only access courses assigned to you")
+  }
+
+  return course
 }
 
 export async function createCourse(data: {
