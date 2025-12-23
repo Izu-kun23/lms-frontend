@@ -127,3 +127,16 @@
 
 /* Font utility for Bebas Neue from next/font */
 .font-bebas { font-family: var(--font-bebas-neue); }
+
+/* Add left margin to forms in sidebar layouts */
+aside + main form,
+aside + main [data-slot="card"] form {
+  margin-left: 1rem;
+}
+
+aside + main form [data-slot="field-group"],
+aside + main [data-slot="card"] form [data-slot="field-group"],
+aside + main form [data-slot="field-set"],
+aside + main [data-slot="card"] form [data-slot="field-set"] {
+  margin-left: 1rem;
+}
